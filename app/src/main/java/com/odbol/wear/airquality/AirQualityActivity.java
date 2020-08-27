@@ -18,6 +18,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
+import android.icu.text.RelativeDateTimeFormatter;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.wearable.complications.ProviderUpdateRequester;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.location.LocationRequest;
 import com.odbol.wear.airquality.complication.AirQualityComplicationProviderService;
+import com.odbol.wear.airquality.purpleair.PurpleAir;
 import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
@@ -44,6 +46,8 @@ public class AirQualityActivity extends FragmentActivity {
     private TextView textView;
     private RxLocation rxLocation;
 
+    private final PurpleAir purpleAir = new PurpleAir();
+
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,24 +57,23 @@ public class AirQualityActivity extends FragmentActivity {
         textView = (TextView) findViewById(R.id.text);
 
         rxLocation = new RxLocation(this);
-
         subscriptions.add(
             checkPermissions()
                 .subscribeOn(Schedulers.io())
                 .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
-                .flatMapMaybe((location ->
-                    rxLocation.geocoding()
-                            .fromLocation(location)
-                            .map(address -> Pair.create(location, address))
-                ))
+                .flatMapSingle(purpleAir::findSensorForLocation)
+                    .map(sensor -> {
+                        if (sensor.getStats() == null) throw new Exception("Invalid sensor data");
+                        return sensor;
+                    })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     // onNext
-                    (locationAndAddress) -> {
+                    (sensor) -> {
                         textView.setText(getString(
-                            R.string.address_as_of_time_activity,
-                            AirQualityComplicationProviderService.getAddressDescription(this, locationAndAddress.second),
-                            getTimeAgo(locationAndAddress.first.getTime())));
+                            R.string.sensor_result,
+                            sensor.getStats().getAvg10Min(),
+                            DateUtils.getRelativeTimeSpanString(this, sensor.getStats().getLastModified(), false)));
                     },
                     // onError
                     (error) -> textView.setText(R.string.location_error)
