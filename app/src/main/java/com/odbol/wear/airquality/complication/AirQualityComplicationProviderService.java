@@ -31,14 +31,18 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.android.gms.location.LocationRequest;
+import com.odbol.wear.airquality.AqiUtils;
 import com.odbol.wear.airquality.R;
 import com.odbol.wear.airquality.AirQualityActivity;
+import com.odbol.wear.airquality.purpleair.PurpleAir;
+import com.odbol.wear.airquality.purpleair.Sensor;
 import com.patloew.rxlocation.FusedLocation;
 import com.patloew.rxlocation.RxLocation;
 
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -48,6 +52,8 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
 
     private RxLocation rxLocation;
     private final CompositeDisposable subscriptions = new CompositeDisposable();
+
+    private final PurpleAir purpleAir = new PurpleAir();
 
     @Override
     public void onCreate() {
@@ -68,7 +74,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             Log.d(TAG, "onComplicationUpdate() id: " + complicationId);
         }
 
-        final Observable<Pair<Location, Address>> task;
+        final Observable<Sensor> task;
         if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             FusedLocation locationProvider = rxLocation.location();
             task = locationProvider
@@ -77,9 +83,8 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                     .flatMapObservable((hasLocation) -> hasLocation ?
                             locationProvider.lastLocation().toObservable() :
                             locationProvider.updates(createLocationRequest()))
-                    .flatMapMaybe((location) -> rxLocation.geocoding()
-                            .fromLocation(location)
-                            .map(address -> Pair.create(location, address)));
+                    .flatMapSingle(purpleAir::findSensorForLocation)
+                    .map(AqiUtils::throwIfInvalid);
         } else {
             task = Observable.error(new SecurityException("No location permission!"));
         }
@@ -88,19 +93,19 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             task
                 .subscribe(
                         // onNext
-                        (locationAddressPair -> updateComplication(complicationId, dataType, manager, locationAddressPair.first, locationAddressPair.second)),
+                        (sensor -> updateComplication(complicationId, dataType, manager, sensor)),
                         // onError
                         (error) -> {
                             Log.e(TAG, "Error retreiving location", error);
-                            updateComplication(complicationId, dataType, manager, null, null);
+                            updateComplication(complicationId, dataType, manager, null);
                         }
                 )
         );
     }
 
-    private void updateComplication(int complicationId, int dataType, ComplicationManager manager, Location location, Address address) {
+    private void updateComplication(int complicationId, int dataType, ComplicationManager manager, Sensor sensor) {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "Address: " + address);
+            Log.d(TAG, "sensor: " + sensor);
         }
 
         ComplicationData complicationData = null;
@@ -108,8 +113,8 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_SHORT_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                                .setShortText(getTimeAgo(location))
-                                .setContentDescription(getFullDescription(location, address))
+                                .setShortText(getAqi(sensor))
+                                .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_my_location))
                                 .setTapAction(getTapAction())
                                 .build();
@@ -117,9 +122,9 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_LONG_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
-                                .setLongTitle(getTimeAgo(location))
-                                .setLongText(getAddressDescriptionText(this, address))
-                                .setContentDescription(getFullDescription(location, address))
+                                .setLongTitle(getTimeAgo(sensor.getStatistics().getLastModified()).build())
+                                .setLongText(getAqi(sensor))
+                                .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_my_location))
                                 .setTapAction(getTapAction())
                                 .build();
@@ -139,17 +144,21 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
         }
     }
 
+    private ComplicationText getAqi(Sensor sensor) {
+        return ComplicationText.plainText(String.valueOf(sensor.getStatistics().getAvg10Min()));
+    }
+
     private PendingIntent getTapAction() {
         Intent intent = new Intent(this, AirQualityActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    private ComplicationText getFullDescription(Location location, Address address) {
-        if (location == null || address == null) return ComplicationText.plainText(getString(R.string.no_location));
+    private ComplicationText getFullDescription(Sensor sensor) {
+        if (sensor == null) return ComplicationText.plainText(getString(R.string.no_location));
 
-        return getTimeAgo(location.getTime())
-                .setSurroundingText(getString(R.string.address_as_of_time_ago, getAddressDescription(this, address), "^1"))
+        return getTimeAgo(sensor.getStatistics().getLastModified())
+                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, sensor.getStatistics().getAvg10Min(), "^1"))
                 .build();
     }
 

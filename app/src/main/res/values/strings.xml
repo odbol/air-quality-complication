@@ -2,8 +2,8 @@
     <string name="app_name">Air Quality</string>
     <string name="intro_text">Swipe edge to exit the map.</string>
 
-    <string name="address_as_of_time_ago"><xliff:g example="3rd Street and Howard Avenue" id="address">%1$s</xliff:g> <xliff:g example="2 minutes" id="time">%2$s</xliff:g> ago</string>
-    <string name="sensor_result">PM2.5 10 minute avg: <xliff:g example="1.2" id="pm">%1$d</xliff:g> checked <xliff:g example="2 minutes ago" id="time">%2$s</xliff:g></string>
+    <string name="aqi_as_of_time_ago"><xliff:g example="50" id="aqi">%1$d</xliff:g> <xliff:g example="2 minutes" id="time">%2$s</xliff:g> ago</string>
+    <string name="sensor_result">AQI: <xliff:g example="50" id="aqi">%1$d</xliff:g> (PM2.5 10 minute avg: <xliff:g example="1.2" id="pm">%1$d</xliff:g>). Last updated <xliff:g example="2 minutes ago" id="time">%2$s</xliff:g></string>
     <string name="no_location">Tap to get location</string>
 
     <string name="title_activity_where_am_i">Air Quality</string>

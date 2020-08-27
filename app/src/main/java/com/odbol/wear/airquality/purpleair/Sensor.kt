@@ -1,5 +1,11 @@
 package com.odbol.wear.airquality.purpleair
 
+import com.google.gson.GsonBuilder
+import com.thanglequoc.aqicalculator.AQICalculator
+import com.thanglequoc.aqicalculator.Pollutant
+import java.lang.NullPointerException
+
+
 // Sample data:
 /*
 {
@@ -25,7 +31,7 @@ package com.odbol.wear.airquality.purpleair
 }
 */
 
-data class Stats(val v: Double, val v1: Double, val lastModified: Long) {
+data class Statistics(val v: Double, val v1: Double, val lastModified: Long) {
     val current: Double
         get() = this.v
 
@@ -44,10 +50,17 @@ data class Sensor(val ID: Int,
                   val Lon: Double?,
                   val PM2_5Value: String?,
                   val LastSeen: Long?,
-                  val Stats: Stats?) {
+                  val Stats: String?) {
 
-    val aqi: Int
-        get() {
+//    val statistics: Statistics = GsonBuilder().create().fromJson(Stats!!, Statistics::class.java)
+    val statistics: Statistics? by lazy {
+        try {
+            return@lazy GsonBuilder().create().fromJson(Stats!!, Statistics::class.java)
+        } catch (e: NullPointerException) {}
+        try {
+            return@lazy Statistics(PM2_5Value!!.toDouble(), PM2_5Value!!.toDouble(), LastSeen!!)
+        } catch (e: NullPointerException) {}
 
-        }
+        return@lazy null
+    }
 }

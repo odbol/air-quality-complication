@@ -9,6 +9,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import kotlin.math.ceil
@@ -19,15 +20,18 @@ const val TAG = "PurpleAir"
 
 interface PurpleAirService {
     @GET("json")
-    fun allSensors(): Call<List<Sensor?>?>?
+    fun allSensors(): Call<SensorResult>?
 
     @GET("json?show={id}")
-    fun sensor(@Path("id") sensorId: Int): Call<Sensor?>?
+    fun sensor(@Path("id") sensorId: Int): Call<SensorResult>?
 }
+
+data class SensorResult(val results: List<Sensor?>)
 
 class PurpleAir {
     private val retrofit = Retrofit.Builder()
             .baseUrl("https://www.purpleair.com/")
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
 
     private val service: PurpleAirService = retrofit.create(PurpleAirService::class.java)
@@ -48,13 +52,13 @@ class PurpleAir {
     }
 
     fun getAllSensors(): Observable<Sensor> {
-        return Observable.create{ emitter: Emitter<Sensor> ->
-            service.allSensors()!!.enqueue(object : Callback<List<Sensor?>?> {
+        return Observable.create { emitter: Emitter<Sensor> ->
+            service.allSensors()!!.enqueue(object : Callback<SensorResult?> {
 
-                override fun onResponse(call: Call<List<Sensor?>?>, response: Response<List<Sensor?>?>) {
+                override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
                     if (response.isSuccessful && response.body() != null) {
-                        response.body()!!.forEach{ d ->
-                            if (d != null) {
+                        response.body()!!.results.forEach { d ->
+                            if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
                                 emitter.onNext(d)
                             }
                         }
@@ -64,11 +68,10 @@ class PurpleAir {
                     }
                 }
 
-                override fun onFailure(call: Call<List<Sensor?>?>, t: Throwable) {
+                override fun onFailure(call: Call<SensorResult?>, t: Throwable) {
                     emitter.onError(t)
                 }
             })
-            }
         }
     }
 

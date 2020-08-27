@@ -23,14 +23,18 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.wearable.complications.ProviderUpdateRequester;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.widget.TextView;
 
 import com.google.android.gms.location.LocationRequest;
 import com.odbol.wear.airquality.complication.AirQualityComplicationProviderService;
 import com.odbol.wear.airquality.purpleair.PurpleAir;
+import com.odbol.wear.airquality.purpleair.Sensor;
 import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +44,8 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class AirQualityActivity extends FragmentActivity {
+
+    private static final String TAG = "AirQualityActivity";
 
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
@@ -56,27 +62,32 @@ public class AirQualityActivity extends FragmentActivity {
 
         textView = (TextView) findViewById(R.id.text);
 
+        textView.setKeepScreenOn(true);
         rxLocation = new RxLocation(this);
         subscriptions.add(
             checkPermissions()
                 .subscribeOn(Schedulers.io())
                 .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
                 .flatMapSingle(purpleAir::findSensorForLocation)
-                    .map(sensor -> {
-                        if (sensor.getStats() == null) throw new Exception("Invalid sensor data");
-                        return sensor;
-                    })
+                    .map(AqiUtils::throwIfInvalid)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     // onNext
                     (sensor) -> {
                         textView.setText(getString(
                             R.string.sensor_result,
-                            sensor.getStats().getAvg10Min(),
-                            DateUtils.getRelativeTimeSpanString(this, sensor.getStats().getLastModified(), false)));
+                                AqiUtils.convertPm25ToAqi(sensor.getStatistics().getAvg10Min()),
+                                sensor.getStatistics().getAvg10Min(),
+                            DateUtils.getRelativeTimeSpanString(this, sensor.getStatistics().getLastModified(), false)));
+
+                        textView.setKeepScreenOn(false);
                     },
                     // onError
-                    (error) -> textView.setText(R.string.location_error)
+                    (error) -> {
+                        Log.e(TAG, "Error:", error);
+                        textView.setText(R.string.location_error);
+                        textView.setKeepScreenOn(false);
+                    }
                 )
         );
     }
