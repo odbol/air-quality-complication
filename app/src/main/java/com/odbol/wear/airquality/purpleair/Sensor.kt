@@ -51,16 +51,25 @@ data class Sensor(val ID: Int,
                   val PM2_5Value: String?,
                   val LastSeen: Long?,
                   val Stats: String?) {
+    val statistics: Statistics?
+    val lastModified: Long
 
-//    val statistics: Statistics = GsonBuilder().create().fromJson(Stats!!, Statistics::class.java)
-    val statistics: Statistics? by lazy {
-        try {
-            return@lazy GsonBuilder().create().fromJson(Stats!!, Statistics::class.java)
-        } catch (e: NullPointerException) {}
-        try {
-            return@lazy Statistics(PM2_5Value!!.toDouble(), PM2_5Value!!.toDouble(), LastSeen!!)
-        } catch (e: NullPointerException) {}
-
-        return@lazy null
+    init {
+        statistics = parseStats()
+        lastModified = statistics?.lastModified ?: LastSeen ?: 0
     }
+
+    private fun parseStats(): Statistics? {
+        try {
+            return GsonBuilder().create().fromJson(Stats!!, Statistics::class.java)
+        } catch (e: NullPointerException) {}
+        try {
+            return Statistics(PM2_5Value!!.toDouble(), PM2_5Value!!.toDouble(), LastSeen!!)
+        } catch (e: NullPointerException) {}
+
+        return null
+    }
+
+    val pm25: Double
+    get() = statistics?.avg10Min ?: PM2_5Value?.toDouble() ?: 0.0
 }

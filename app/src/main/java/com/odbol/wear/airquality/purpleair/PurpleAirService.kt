@@ -5,6 +5,7 @@ import android.util.Log
 import io.reactivex.Emitter
 import io.reactivex.Observable
 import io.reactivex.Single
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -12,9 +13,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
+import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.math.roundToInt
+
 
 const val TAG = "PurpleAir"
 
@@ -29,8 +31,15 @@ interface PurpleAirService {
 data class SensorResult(val results: List<Sensor?>)
 
 class PurpleAir {
+    private val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(2, TimeUnit.MINUTES)
+            .readTimeout(2, TimeUnit.MINUTES)
+            .writeTimeout(2, TimeUnit.MINUTES)
+            .build()
+
     private val retrofit = Retrofit.Builder()
             .baseUrl("https://www.purpleair.com/")
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
@@ -58,6 +67,7 @@ class PurpleAir {
                 override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
                     if (response.isSuccessful && response.body() != null) {
                         response.body()!!.results.forEach { d ->
+                            Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
                             if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
                                 emitter.onNext(d)
                             }

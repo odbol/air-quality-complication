@@ -76,9 +76,9 @@ public class AirQualityActivity extends FragmentActivity {
                     (sensor) -> {
                         textView.setText(getString(
                             R.string.sensor_result,
-                                AqiUtils.convertPm25ToAqi(sensor.getStatistics().getAvg10Min()),
-                                sensor.getStatistics().getAvg10Min(),
-                            DateUtils.getRelativeTimeSpanString(this, sensor.getStatistics().getLastModified(), false)));
+                                AqiUtils.convertPm25ToAqi(sensor.getPm25()),
+                                sensor.getPm25(),
+                            DateUtils.getRelativeTimeSpanString(this, sensor.getLastModified(), false)));
 
                         textView.setKeepScreenOn(false);
                     },

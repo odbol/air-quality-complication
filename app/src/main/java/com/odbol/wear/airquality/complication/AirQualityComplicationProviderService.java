@@ -145,7 +145,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     }
 
     private ComplicationText getAqi(Sensor sensor) {
-        return ComplicationText.plainText(String.valueOf(sensor.getStatistics().getAvg10Min()));
+        return ComplicationText.plainText(String.valueOf(sensor.getPm25()));
     }
 
     private PendingIntent getTapAction() {
@@ -157,8 +157,8 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     private ComplicationText getFullDescription(Sensor sensor) {
         if (sensor == null) return ComplicationText.plainText(getString(R.string.no_location));
 
-        return getTimeAgo(sensor.getStatistics().getLastModified())
-                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, sensor.getStatistics().getAvg10Min(), "^1"))
+        return getTimeAgo(sensor.getLastModified())
+                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, sensor.getPm25(), "^1"))
                 .build();
     }
 
