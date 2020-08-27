@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wear.whereami.complication;
+package com.odbol.wear.airquality.complication;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -31,8 +31,8 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.android.gms.location.LocationRequest;
-import com.google.wear.whereami.R;
-import com.google.wear.whereami.WhereAmIActivity;
+import com.odbol.wear.airquality.R;
+import com.odbol.wear.airquality.AirQualityActivity;
 import com.patloew.rxlocation.FusedLocation;
 import com.patloew.rxlocation.RxLocation;
 
@@ -42,9 +42,9 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class WhereAmIComplicationProviderService extends ComplicationProviderService {
+public class AirQualityComplicationProviderService extends ComplicationProviderService {
 
-    private static final String TAG = "WhereAmIComplication";
+    private static final String TAG = "AirQualityComplication";
 
     private RxLocation rxLocation;
     private final CompositeDisposable subscriptions = new CompositeDisposable();
@@ -140,7 +140,7 @@ public class WhereAmIComplicationProviderService extends ComplicationProviderSer
     }
 
     private PendingIntent getTapAction() {
-        Intent intent = new Intent(this, WhereAmIActivity.class)
+        Intent intent = new Intent(this, AirQualityActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }

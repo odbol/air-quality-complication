@@ -4,10 +4,10 @@
 
     To get one, follow this link, follow the directions and press "Create" at the end:
 
-    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=CE:A2:E1:5F:1B:FB:F4:63:71:C8:F1:79:17:5D:CE:67:54:67:71:1D%3Bcom.google.wear.whereami
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=CE:A2:E1:5F:1B:FB:F4:63:71:C8:F1:79:17:5D:CE:67:54:67:71:1D%3Bcom.odbol.wear.airquality
 
     You can also add your credentials to an existing key, using this line:
-    CE:A2:E1:5F:1B:FB:F4:63:71:C8:F1:79:17:5D:CE:67:54:67:71:1D;com.google.wear.whereami
+    CE:A2:E1:5F:1B:FB:F4:63:71:C8:F1:79:17:5D:CE:67:54:67:71:1D;com.odbol.wear.airquality
 
     Alternatively, follow the directions here:
     https://developers.google.com/maps/documentation/android/start#get-key

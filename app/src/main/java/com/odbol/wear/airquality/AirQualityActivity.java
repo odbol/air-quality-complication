@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wear.whereami;
+package com.odbol.wear.airquality;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -23,11 +23,10 @@ import android.support.v4.app.FragmentActivity;
 import android.support.wearable.complications.ProviderUpdateRequester;
 import android.text.format.DateUtils;
 import android.util.Pair;
-import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.gms.location.LocationRequest;
-import com.google.wear.whereami.complication.WhereAmIComplicationProviderService;
+import com.odbol.wear.airquality.complication.AirQualityComplicationProviderService;
 import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
@@ -38,7 +37,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class WhereAmIActivity extends FragmentActivity {
+public class AirQualityActivity extends FragmentActivity {
 
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
@@ -70,7 +69,7 @@ public class WhereAmIActivity extends FragmentActivity {
                     (locationAndAddress) -> {
                         textView.setText(getString(
                             R.string.address_as_of_time_activity,
-                            WhereAmIComplicationProviderService.getAddressDescription(this, locationAndAddress.second),
+                            AirQualityComplicationProviderService.getAddressDescription(this, locationAndAddress.second),
                             getTimeAgo(locationAndAddress.first.getTime())));
                     },
                     // onError
@@ -93,7 +92,7 @@ public class WhereAmIActivity extends FragmentActivity {
 
     private void forceComplicationUpdate() {
         if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            new ProviderUpdateRequester(this, new ComponentName(this, WhereAmIComplicationProviderService.class))
+            new ProviderUpdateRequester(this, new ComponentName(this, AirQualityComplicationProviderService.class))
                     .requestUpdateAll();
         }
     }
