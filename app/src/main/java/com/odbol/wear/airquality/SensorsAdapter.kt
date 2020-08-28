@@ -37,7 +37,7 @@ class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerVi
 
         fun bind(sensor: Sensor) {
             title.text = sensor.Label ?: sensor.ID.toString()
-            aqi.text = "AQI: ${AqiUtils.convertPm25ToAqi(sensor.pm25)}"
+            aqi.text = "AQI: ${AqiUtils.convertPm25ToAqi(sensor.pm25).aqi}"
             subtitle.text = "${sensor.DEVICE_LOCATIONTYPE} (GPS Coords: ${sensor.Lat}, ${sensor.Lon})"
 
             itemView.isSelected = sensor.isSelected

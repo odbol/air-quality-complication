@@ -14,6 +14,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
+import retrofit2.http.Query
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -24,8 +25,8 @@ interface PurpleAirService {
     @GET("json")
     fun allSensors(): Call<SensorResult>?
 
-    @GET("json?show={id}")
-    fun sensor(@Path("id") sensorId: Int): Call<SensorResult>?
+    @GET("json")
+    fun sensor(@Query("show") sensorId: Int): Call<SensorResult>?
 }
 
 data class SensorResult(val results: List<Sensor?>)

@@ -1,32 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/dark_grey"
-    android:padding="@dimen/box_inset_layout_padding"
+    android:background="@color/black"
     tools:context=".AirQualityActivity"
     tools:deviceIds="wear">
 
-    <FrameLayout
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:accessibilityLiveRegion="polite"
+        android:text="@string/hello_world" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/inner_frame_layout_padding"
-        app:boxedEdges="all">
-
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|center_vertical"
-            android:accessibilityLiveRegion="polite"
-            android:text="@string/hello_world" />
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
-    </FrameLayout>
-</android.support.wear.widget.BoxInsetLayout>
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:visibility="gone" />
+</FrameLayout>

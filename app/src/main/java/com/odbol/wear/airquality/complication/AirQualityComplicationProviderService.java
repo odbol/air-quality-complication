@@ -129,7 +129,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_LONG_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
-                                .setLongTitle(getTimeAgo(sensor.getStatistics().getLastModified()).build())
+                                .setLongTitle(getTimeAgo(sensor.getLastModified()).build())
                                 .setLongText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_my_location))
@@ -152,7 +152,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     }
 
     private ComplicationText getAqi(Sensor sensor) {
-        return ComplicationText.plainText(String.valueOf(sensor.getPm25()));
+        return ComplicationText.plainText(String.valueOf(AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI()));
     }
 
     private PendingIntent getTapAction() {
@@ -165,7 +165,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
         if (sensor == null) return ComplicationText.plainText(getString(R.string.no_location));
 
         return getTimeAgo(sensor.getLastModified())
-                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, sensor.getPm25(), "^1"))
+                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI(), "^1"))
                 .build();
     }
 
