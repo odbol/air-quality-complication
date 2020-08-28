@@ -278,7 +278,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         double progress = purpleAir.getAllSensorsDownloader().getProgress();
         Log.d(TAG, "Download progress: " + progress);
         if (progress > 0 && progress < 1) {
-            progressBar.setProgress((int) (progress * (float)progressBar.getMax() * PROGRESS_DOWNLOAD_TOTAL_PERCENTAGE));
+            progressBar.setProgress((int) Math.max((float)progressBar.getMax() * 0.1, (progress * (float)progressBar.getMax() * PROGRESS_DOWNLOAD_TOTAL_PERCENTAGE)));
         } else {
             progressBar.incrementProgressBy((int) Math.round(getProgressRate() * (float) progressBar.getMax() * ((float) PROGRESS_UPDATE_INTERVAL_SECONDS / (float) PROGRESS_UPDATE_TOTAL_SECONDS)));
         }
@@ -290,6 +290,9 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         }
         if (getProgressPercentage() > 0.9) {
             return 0.01f;
+        }
+        if (getProgressPercentage() < 0.2) {
+            return 5f;
         }
         return 1f;
     }

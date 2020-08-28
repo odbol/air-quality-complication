@@ -34,7 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="8dp"
             android:layout_margin="4dp"
-            android:progress="1"
+            android:progress="500"
             android:max="10000" />
 
         <TextView
