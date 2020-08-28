@@ -105,22 +105,23 @@ open class PurpleAir(context: Context) {
 //
 //        }
         return allSensorsDownloader.getAllSensors()
-        .subscribeOn(Schedulers.io())
-        .flatMap { results ->
-            Single.create { emitter: SingleEmitter<List<Sensor>> ->
-                val valids = ArrayList<Sensor>(results.size)
-                results.forEach { d ->
-                    //Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
-                    if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
-                        valids.add(d)
-                    } else {
-                        Log.w(TAG, "Got invalid sensor $d")
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.computation())
+            .flatMap { results ->
+                Single.create { emitter: SingleEmitter<List<Sensor>> ->
+                    val valids = ArrayList<Sensor>(results.size)
+                    results.forEach { d ->
+                        //Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
+                        if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
+                            valids.add(d)
+                        } else {
+                            Log.w(TAG, "Got invalid sensor $d")
+                        }
                     }
+                    emitter.onSuccess(valids)
                 }
-                emitter.onSuccess(valids)
+                .subscribeOn(Schedulers.computation())
             }
-            .subscribeOn(Schedulers.computation())
-        }
     }
 
 
