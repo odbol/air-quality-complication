@@ -120,9 +120,10 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_SHORT_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
+                                .setShortTitle(getTimeAgo(sensor.getLastModified()).build())
                                 .setShortText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
-                                .setIcon(Icon.createWithResource(this, R.mipmap.ic_launcher_round))
+                                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
                                 .setTapAction(getTapAction())
                                 .build();
                 break;
@@ -132,7 +133,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                                 .setLongTitle(getTimeAgo(sensor.getLastModified()).build())
                                 .setLongText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
-                                .setIcon(Icon.createWithResource(this, R.mipmap.ic_launcher_round))
+                                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
                                 .setTapAction(getTapAction())
                                 .build();
                 break;
