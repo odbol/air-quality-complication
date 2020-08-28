@@ -170,6 +170,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
     private void onSensorSelected(Sensor sensor) {
         sensorStore.setSelectedSensorId(sensor.getID());
         forceComplicationUpdate();
+
+        progressBar.postDelayed(this::finish, 1000);
     }
 
     @Override
