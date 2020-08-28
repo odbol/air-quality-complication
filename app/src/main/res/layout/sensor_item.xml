@@ -16,7 +16,8 @@
         android:id="@+id/aqi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:textAppearanceLarge" />
+        android:textAppearance="?android:textAppearanceLarge"
+        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/subtitle"
