@@ -110,7 +110,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .debounce(3, TimeUnit.SECONDS)
                     .take(1)
                     .singleOrError()
-                    .zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
+                    //.zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
                     .flatMapObservable(this::findSensorsForLocation)
                     .take(MAX_SENSORS_IN_LIST)
                     .map(sensor -> {
@@ -266,7 +266,12 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
     }
 
     private void incrementProgressBar() {
-        progressBar.incrementProgressBy((int) Math.round( getProgressRate() * (float)progressBar.getMax() * ((float)PROGRESS_UPDATE_INTERVAL_SECONDS / (float)PROGRESS_UPDATE_TOTAL_SECONDS)));
+        double progress = purpleAir.getAllSensorsDownloader().getProgress();
+        if (progress > 0) {
+            progressBar.setProgress((int) (progress * (float)progressBar.getMax()));
+        } else {
+            progressBar.incrementProgressBy((int) Math.round(getProgressRate() * (float) progressBar.getMax() * ((float) PROGRESS_UPDATE_INTERVAL_SECONDS / (float) PROGRESS_UPDATE_TOTAL_SECONDS)));
+        }
     }
 
     private float getProgressRate() {
