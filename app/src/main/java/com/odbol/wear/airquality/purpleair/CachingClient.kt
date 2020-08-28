@@ -5,20 +5,9 @@ import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
-
-//open class PurpleAirCache(context: Context): PurpleAir() {
-//
-//    val prefs = context.getSharedPreferences("SENSORS_CACHE", Context.MODE_PRIVATE)
-//
-//    override fun getAllSensors(): Observable<Sensor> {
-//        return super.getAllSensors()
-//                .toList()
-//                .flattenAsObservable { sensors ->
-//                    sensors
-//                }
-//    }
-//}
-
+/**
+ * Caches calls to the giant list of sensors, but uses fresh data for individual sensor retrieval.
+ */
 class CachingClient(private val context: Context) {
     fun createClient(): OkHttpClient {
         return OkHttpClient.Builder()

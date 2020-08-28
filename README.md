@@ -1,4 +1,6 @@
-# Air Quality Complication for Wear OS
+Air Quality Complication for Wear OS
+======================================
+by http://odbol.com
 
 Measure the Air Quality Index (AQI) near you, right on your Wear OS watchface as a complication. If you suffer from wildfires or air pollution, this complication can help you decide when to stay indoors or wear protection.
 
@@ -8,7 +10,10 @@ No accuracy is guaranteed: these numbers are gathered by PurpleAir.com from sens
 
 
 
-# Attributions
+Attributions
+------------
 
-Icons:
  - [environmental pollution by ProSymbols](https://thenounproject.com/term/air-pollution/1970758/) from the Noun Project
+ - Retrofit
+ - RxJava
+ - AQI Calculator by Thanglequoc
