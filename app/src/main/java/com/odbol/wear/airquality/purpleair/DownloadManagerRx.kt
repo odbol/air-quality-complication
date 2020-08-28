@@ -22,7 +22,7 @@ class DownloadManagerRx(context: Context) {
     fun startDownload(url: String, toFile: File, notificationTitle: CharSequence): Long {
 
         val request = DownloadManager.Request(Uri.parse(url))
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN) // Visibility of the download Notification
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED) // Visibility of the download Notification
                 .setDestinationUri(Uri.fromFile(toFile)) // Uri of the destination file
                 .setTitle(notificationTitle) // Title of the Download Notification
                 .setDescription("Downloading sensors") // Description of the Download Notification

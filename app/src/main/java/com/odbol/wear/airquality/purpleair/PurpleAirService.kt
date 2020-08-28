@@ -162,7 +162,7 @@ class DownloadReceiver: BroadcastReceiver() {
 class AllSensorsDownloader(private val context: Context) {
     val dm = DownloadManagerRx(context)
 
-    val file = File(context.cacheDir, "all_sensors.json")
+    val file = File(context.externalCacheDir, "all_sensors.json")
 
     fun getAllSensors() : Single<List<Sensor?>> {
         if (file.exists()) {
