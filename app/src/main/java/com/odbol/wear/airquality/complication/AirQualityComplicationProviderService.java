@@ -137,6 +137,19 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                                 .setTapAction(getTapAction())
                                 .build();
                 break;
+            case ComplicationData.TYPE_RANGED_VALUE:
+                complicationData =
+                        new ComplicationData.Builder(ComplicationData.TYPE_RANGED_VALUE)
+                                .setShortTitle(getTimeAgo(sensor.getLastModified()).build())
+                                .setShortText(getAqi(sensor))
+                                .setMinValue(0)
+                                .setMaxValue(500)
+                                .setValue(Math.min(500, AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI()))
+                                .setContentDescription(getFullDescription(sensor))
+                                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
+                                .setTapAction(getTapAction())
+                                .build();
+                break;
             default:
                 if (Log.isLoggable(TAG, Log.WARN)) {
                     Log.w(TAG, "Unexpected complication type " + dataType);
