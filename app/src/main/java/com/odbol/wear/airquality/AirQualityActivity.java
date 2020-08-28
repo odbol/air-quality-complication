@@ -54,6 +54,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private static final long PROGRESS_UPDATE_INTERVAL_SECONDS = 3;
     private static final long PROGRESS_UPDATE_TOTAL_SECONDS = TimeUnit.MINUTES.toSeconds(5);
+    private static final float PROGRESS_DOWNLOAD_TOTAL_PERCENTAGE = 0.5f;
 
     int MAX_SENSORS_IN_LIST = 100;
 
@@ -267,15 +268,16 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private void incrementProgressBar() {
         double progress = purpleAir.getAllSensorsDownloader().getProgress();
-        if (progress > 0) {
-            progressBar.setProgress((int) (progress * (float)progressBar.getMax()));
+        Log.d(TAG, "Download progress: " + progress);
+        if (progress > 0 && progress < 1) {
+            progressBar.setProgress((int) (progress * (float)progressBar.getMax() * PROGRESS_DOWNLOAD_TOTAL_PERCENTAGE));
         } else {
             progressBar.incrementProgressBy((int) Math.round(getProgressRate() * (float) progressBar.getMax() * ((float) PROGRESS_UPDATE_INTERVAL_SECONDS / (float) PROGRESS_UPDATE_TOTAL_SECONDS)));
         }
     }
 
     private float getProgressRate() {
-        if (getProgressPercentage() > 0.7) {
+        if (getProgressPercentage() > PROGRESS_DOWNLOAD_TOTAL_PERCENTAGE + 0.2) {
             return 0.1f;
         }
         if (getProgressPercentage() > 0.9) {

@@ -40,6 +40,10 @@ class DownloadManagerRx(context: Context) {
         return downloadID
     }
 
+    /**
+     * @return 1 if download finished. -1 if download failed or not started. Otherwise, the progress
+     *         of the download.
+     */
     fun getProgress(): Double {
         val cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
         if (cursor.moveToFirst()) {

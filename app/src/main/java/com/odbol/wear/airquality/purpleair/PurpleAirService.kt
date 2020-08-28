@@ -165,18 +165,16 @@ class AllSensorsDownloader(private val context: Context) {
     val file = File(context.externalCacheDir, "all_sensors.json")
 
     fun getAllSensors() : Single<List<Sensor?>> {
-        if (file.exists()) {
-            Log.d(TAG, "Loading cached file")
-            return loadFile()
-        }
-
         // If it's already going, don't start it again.
-        if (dm.getProgress() < 0) {
+        val progress = dm.getProgress()
+        if (progress >= 1) {
+            return loadFile()
+        } else if (progress < 0) {
             Log.d(TAG, "Starting download")
             dm.startDownload(PURPLE_AIR_BASE_URL + "json", file, "Downloading Sensors from PurpleAir")
         }
 
-        return  Single.using({
+        return Single.using({
             DownloadReceiver()
         }, { receiver ->
             Log.d(TAG, "Registering download receiver")
