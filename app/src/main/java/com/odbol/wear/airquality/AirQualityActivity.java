@@ -128,8 +128,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     })
                     .map(sensors -> {
                         sensors.sort((a, b) -> {
-                            if (a.isSelected()) return 1;
-                            if (b.isSelected()) return -1;
+                            if (a.isSelected()) return -1;
+                            if (b.isSelected()) return 1;
                             return 0;
                         });
                         return sensors;
