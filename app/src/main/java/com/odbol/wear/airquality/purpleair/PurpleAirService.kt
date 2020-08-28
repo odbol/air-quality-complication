@@ -6,12 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.util.Log
 import com.google.gson.GsonBuilder
-import io.reactivex.Emitter
-import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
 import io.reactivex.schedulers.Schedulers
@@ -24,7 +20,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.FileReader
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -151,12 +146,14 @@ open class PurpleAir(context: Context) {
 }
 
 
-class DownloadReceiver: BroadcastReceiver() {
+class DownloadReceiver(private val downloadId: Long): BroadcastReceiver() {
 
-    val onConnected : SingleSubject<Boolean> = SingleSubject.create();
+    val onDownloaded : SingleSubject<Boolean> = SingleSubject.create();
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        onConnected.onSuccess(true)
+        if (intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId) {
+            onDownloaded.onSuccess(true)
+        }
     }
 }
 
@@ -176,13 +173,13 @@ class AllSensorsDownloader(private val context: Context) {
         }
 
         return Single.using({
-            DownloadReceiver()
+            DownloadReceiver(dm.downloadId)
         }, { receiver ->
             Log.d(TAG, "Registering download receiver")
 
             context.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
-            receiver.onConnected
+            receiver.onDownloaded
                     .flatMap{loadFile()}
         },
         { receiver ->
