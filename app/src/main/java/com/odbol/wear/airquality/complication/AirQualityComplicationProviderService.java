@@ -122,7 +122,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                         new ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
                                 .setShortText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
-                                .setIcon(Icon.createWithResource(this, R.drawable.ic_my_location))
+                                .setIcon(Icon.createWithResource(this, R.mipmap.ic_launcher_round))
                                 .setTapAction(getTapAction())
                                 .build();
                 break;
@@ -132,7 +132,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                                 .setLongTitle(getTimeAgo(sensor.getLastModified()).build())
                                 .setLongText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
-                                .setIcon(Icon.createWithResource(this, R.drawable.ic_my_location))
+                                .setIcon(Icon.createWithResource(this, R.mipmap.ic_launcher_round))
                                 .setTapAction(getTapAction())
                                 .build();
                 break;

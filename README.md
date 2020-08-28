@@ -1,7 +1,14 @@
 # Air Quality Complication for Wear OS
 
-This is a simple app that shows a complication on the watchface which tells you the current AQI
-(Air Quality Index) for your location. It uses the Purple Air API to download PM2.5 sensor data from
-sensors nearest to you.
+Measure the Air Quality Index (AQI) near you, right on your Wear OS watchface as a complication. If you suffer from wildfires or air pollution, this complication can help you decide when to stay indoors or wear protection.
 
-Useful for smartwatch users who are affected by air quality in their region.
+This gets its data from community air sensors near you, using PurpleAir.com. It's based on the latest 10-minute PM2.5 average from the sensor you select.
+
+No accuracy is guaranteed: these numbers are gathered by PurpleAir.com from sensors in the community who have decided to make their data public.
+
+
+
+# Attributions
+
+Icons:
+ - [environmental pollution by ProSymbols](https://thenounproject.com/term/air-pollution/1970758/) from the Noun Project
