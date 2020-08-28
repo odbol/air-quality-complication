@@ -18,7 +18,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
-import android.icu.text.RelativeDateTimeFormatter;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,8 +26,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.wearable.complications.ProviderUpdateRequester;
 import android.text.format.DateUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.gms.location.LocationRequest;
@@ -37,27 +37,33 @@ import com.odbol.wear.airquality.purpleair.Sensor;
 import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static com.odbol.wear.airquality.purpleair.PurpleAirServiceKt.sortByClosest;
 
 public class AirQualityActivity extends FragmentActivity {
 
     private static final String TAG = "AirQualityActivity";
 
+    private static final long PROGRESS_UPDATE_INTERVAL_SECONDS = 1;
+    private static final long PROGRESS_UPDATE_TOTAL_SECONDS = TimeUnit.MINUTES.toSeconds(2);
+
     int MAX_SENSORS_IN_LIST = 100;
 
     private final CompositeDisposable subscriptions = new CompositeDisposable();
+    private final CompositeDisposable loadingSubscription = new CompositeDisposable();
 
+    private View loadingView;
     private TextView textView;
     private RecyclerView listView;
+    private ProgressBar progressBar;
 
     private RxLocation rxLocation;
 
@@ -77,6 +83,8 @@ public class AirQualityActivity extends FragmentActivity {
         sensorStore = new SensorStore(this);
 
         textView = (TextView) findViewById(R.id.text);
+        progressBar = (ProgressBar) findViewById(R.id.progress);
+        loadingView = (View) findViewById(R.id.loading);
         listView = (RecyclerView) findViewById(R.id.list);
 
         listView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
@@ -84,44 +92,75 @@ public class AirQualityActivity extends FragmentActivity {
 
         int selectedSensorId = sensorStore.getSelectedSensorId();
 
-        textView.setKeepScreenOn(true);
+        startLoading();
+
         rxLocation = new RxLocation(this);
         subscriptions.add(
             checkPermissions()
+                    .subscribeOn(Schedulers.io())
+                    .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
+                    .debounce(3, TimeUnit.SECONDS)
+                    .flatMap(this::findSensorsForLocation)
+                    .take(MAX_SENSORS_IN_LIST)
+                    .map(sensor -> {
+                        if (sensor.getID() == selectedSensorId) {
+                            sensor.setSelected(true);
+                        }
+                        return sensor;
+                    })
+                    .toSortedList((a, b) -> {
+                        if (a.isSelected()) return 1;
+                        if (b.isSelected()) return -1;
+                        return 0;
+                    }, MAX_SENSORS_IN_LIST)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        // onNext
+                        (sensors) -> {
+                            loadingView.setVisibility(View.GONE);
+                            listView.setVisibility(View.VISIBLE);
+
+                            adapter.setSensors(sensors);
+
+                            doneLoading();
+                        },
+                        // onError
+                        (error) -> {
+                            Log.e(TAG, "Error:", error);
+                            textView.setText(R.string.location_error);
+                            doneLoading();
+                        }
+                    )
+        );
+    }
+
+    private Observable<Sensor> findSensorsForLocation(Location location) {
+        return purpleAir.getAllSensors()
                 .subscribeOn(Schedulers.io())
-                .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
-                .flatMap(purpleAir::findSensorsForLocation)
-                .take(MAX_SENSORS_IN_LIST)
-                .map(sensor -> {
-                    if (sensor.getID() == selectedSensorId) {
-                        sensor.setSelected(true);
+                .doOnNext((s) -> progressBar.post(() -> {
+                    //Log.d(TAG, "Done loading sensors " + progressBar.getProgress());
+                    if (progressBar.getProgress() < 60) {
+                        progressBar.setProgress(60, true);
                     }
-                    return sensor;
-                })
+                }))
+                .sorted(sortByClosest(location));
+    }
 
-                .toSortedList((a, b) -> {
-                    if (a.isSelected()) return 1;
-                    if (b.isSelected()) return -1;
-                    return 0;
-                }, MAX_SENSORS_IN_LIST)
+    private void doneLoading() {
+        loadingView.setKeepScreenOn(false);
+
+        loadingSubscription.clear();
+    }
+
+    private void startLoading() {
+        loadingView.setKeepScreenOn(true);
+        progressBar.setProgress(0);
+
+        loadingSubscription.clear();
+
+        loadingSubscription.add(Observable.interval(PROGRESS_UPDATE_INTERVAL_SECONDS, TimeUnit.SECONDS, Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    // onNext
-                    (sensors) -> {
-                        textView.setVisibility(View.GONE);
-                        listView.setVisibility(View.VISIBLE);
-
-                        adapter.setSensors(sensors);
-
-                        textView.setKeepScreenOn(false);
-                    },
-                    // onError
-                    (error) -> {
-                        Log.e(TAG, "Error:", error);
-                        textView.setText(R.string.location_error);
-                        textView.setKeepScreenOn(false);
-                    }
-                )
+                .subscribe(time -> progressBar.incrementProgressBy((int) Math.round(/*Math.random() * */(float)progressBar.getMax() * ((float)PROGRESS_UPDATE_INTERVAL_SECONDS / (float)PROGRESS_UPDATE_TOTAL_SECONDS))))
         );
     }
 
