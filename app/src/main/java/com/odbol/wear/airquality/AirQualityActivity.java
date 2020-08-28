@@ -20,6 +20,7 @@ import android.content.ComponentName;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -236,6 +237,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         //loadingView.setKeepScreenOn(false);
 
         stopLoadingAnimation();
+
+        getSystemService(Vibrator.class).vibrate(300);
     }
 
     private void startLoading() {
