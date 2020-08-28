@@ -105,7 +105,6 @@ open class PurpleAir(context: Context) {
 //
 //        }
         return allSensorsDownloader.getAllSensors()
-            .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.computation())
             .flatMap { results ->
                 Single.create { emitter: SingleEmitter<List<Sensor>> ->
@@ -194,11 +193,11 @@ class AllSensorsDownloader(private val context: Context) {
 
     private fun loadFile(): Single<List<Sensor?>> {
         Log.d(TAG, "loadFile()")
-        return try {
-            Single.just(FileReader(file).use { GsonBuilder().create().fromJson(it, SensorResult::class.java) }.results)
-        } catch(e: FileNotFoundException) {
-            Single.error(e)
-        }
+        return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
+                emitter.onSuccess(FileReader(file).use {
+                    GsonBuilder().create().fromJson(it, SensorResult::class.java) }.results)
+            }
+            .subscribeOn(Schedulers.io())
     }
 
     fun getProgress() = dm.getProgress()

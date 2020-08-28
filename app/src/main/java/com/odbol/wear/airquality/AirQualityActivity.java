@@ -115,7 +115,6 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .singleOrError()
                     //.zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
                     .zipWith(purpleAir.getAllSensors(), (location, sensors) -> findSensorsForLocation(location, sensors))
-                    .flatMap()
                     .subscribeOn(Schedulers.computation())
                     .observeOn(Schedulers.computation())
                     .map(sensors -> sensors.subList(0, MAX_SENSORS_IN_LIST))
