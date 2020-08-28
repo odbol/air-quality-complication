@@ -21,10 +21,13 @@ import android.content.pm.PackageManager;
 import android.icu.text.RelativeDateTimeFormatter;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.wearable.complications.ProviderUpdateRequester;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.util.Pair;
+import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.gms.location.LocationRequest;
@@ -47,12 +50,20 @@ public class AirQualityActivity extends FragmentActivity {
 
     private static final String TAG = "AirQualityActivity";
 
+    int MAX_SENSORS_IN_LIST = 50;
+
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
     private TextView textView;
+    private RecyclerView listView;
+
     private RxLocation rxLocation;
 
-    private final PurpleAir purpleAir = new PurpleAir();
+    private PurpleAir purpleAir;
+
+    private final SensorsAdapter adapter = new SensorsAdapter(this::onSensorSelected);
+
+    private SensorStore sensorStore;
 
     @SuppressLint("MissingPermission")
     @Override
@@ -60,7 +71,16 @@ public class AirQualityActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.where_am_i_activity);
 
+        purpleAir = new PurpleAir(this);
+        sensorStore = new SensorStore(this);
+
         textView = (TextView) findViewById(R.id.text);
+        listView = (RecyclerView) findViewById(R.id.list);
+
+        listView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        listView.setAdapter(adapter);
+
+        int selectedSensorId = sensorStore.getSelectedSensorId();
 
         textView.setKeepScreenOn(true);
         rxLocation = new RxLocation(this);
@@ -68,17 +88,26 @@ public class AirQualityActivity extends FragmentActivity {
             checkPermissions()
                 .subscribeOn(Schedulers.io())
                 .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
-                .flatMapSingle(purpleAir::findSensorForLocation)
-                    .map(AqiUtils::throwIfInvalid)
+                .flatMap(purpleAir::findSensorsForLocation)
+                .map(sensor -> {
+                    if (sensor.getID() == selectedSensorId) {
+                        sensor.setSelected(true);
+                    }
+                    return sensor;
+                })
+                .toSortedList((a, b) -> {
+                    if (a.isSelected()) return 1;
+                    if (b.isSelected()) return -1;
+                    return 0;
+                }, 5000)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     // onNext
-                    (sensor) -> {
-                        textView.setText(getString(
-                            R.string.sensor_result,
-                                AqiUtils.convertPm25ToAqi(sensor.getPm25()),
-                                sensor.getPm25(),
-                            DateUtils.getRelativeTimeSpanString(this, sensor.getLastModified(), false)));
+                    (sensors) -> {
+                        textView.setVisibility(View.GONE);
+                        listView.setVisibility(View.VISIBLE);
+
+                        adapter.setSensors(sensors);
 
                         textView.setKeepScreenOn(false);
                     },
@@ -90,6 +119,11 @@ public class AirQualityActivity extends FragmentActivity {
                     }
                 )
         );
+    }
+
+    private void onSensorSelected(Sensor sensor) {
+        sensorStore.setSelectedSensorId(sensor.getID());
+        forceComplicationUpdate();
     }
 
     @Override

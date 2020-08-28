@@ -8,6 +8,6 @@
 
     <string name="title_activity_where_am_i">Air Quality</string>
 
-    <string name="hello_world">Loading location…</string>
+    <string name="hello_world">Loading sensors…</string>
     <string name="location_error">Error retrieving location</string>
 </resources>

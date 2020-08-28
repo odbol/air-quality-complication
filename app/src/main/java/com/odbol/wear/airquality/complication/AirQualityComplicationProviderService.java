@@ -53,12 +53,13 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     private RxLocation rxLocation;
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
-    private final PurpleAir purpleAir = new PurpleAir();
+    private PurpleAir purpleAir;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        purpleAir = new PurpleAir(this);
         rxLocation = new RxLocation(this);
     }
 

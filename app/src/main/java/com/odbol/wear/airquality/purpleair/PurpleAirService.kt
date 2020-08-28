@@ -1,11 +1,11 @@
 package com.odbol.wear.airquality.purpleair
 
+import android.content.Context
 import android.location.Location
 import android.util.Log
 import io.reactivex.Emitter
 import io.reactivex.Observable
 import io.reactivex.Single
-import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -13,7 +13,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
-import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -30,22 +29,25 @@ interface PurpleAirService {
 
 data class SensorResult(val results: List<Sensor?>)
 
-class PurpleAir {
-    private val okHttpClient = OkHttpClient.Builder()
-            .connectTimeout(2, TimeUnit.MINUTES)
-            .readTimeout(2, TimeUnit.MINUTES)
-            .writeTimeout(2, TimeUnit.MINUTES)
-            .build()
+open class PurpleAir(context: Context) {
+
+    val client = CachingClient(context)
 
     private val retrofit = Retrofit.Builder()
             .baseUrl("https://www.purpleair.com/")
-            .client(okHttpClient)
+            .client(client.createClient())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
     private val service: PurpleAirService = retrofit.create(PurpleAirService::class.java)
 
-    fun findSensorForLocation(location: Location): Single<Sensor> {
+    open fun findSensorForLocation(location: Location): Single<Sensor> {
+        return findSensorsForLocation(location)
+                .take(1)
+                .singleOrError()
+    }
+
+    open fun findSensorsForLocation(location: Location): Observable<Sensor> {
         return getAllSensors()
                 .sorted { a, b ->
                     // Multiply so small differences are counted after rounding.
@@ -56,11 +58,9 @@ class PurpleAir {
                         floor(dist).toInt()
                     }
                 }
-                .take(1)
-                .singleOrError()
     }
 
-    fun getAllSensors(): Observable<Sensor> {
+    open fun getAllSensors(): Observable<Sensor> {
         return Observable.create { emitter: Emitter<Sensor> ->
             service.allSensors()!!.enqueue(object : Callback<SensorResult?> {
 
@@ -98,3 +98,4 @@ class PurpleAir {
         }
     }
 }
+

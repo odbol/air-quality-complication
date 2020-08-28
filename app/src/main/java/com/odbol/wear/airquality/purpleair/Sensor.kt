@@ -54,6 +54,8 @@ data class Sensor(val ID: Int,
     val statistics: Statistics?
     val lastModified: Long
 
+    var isSelected = false
+
     init {
         statistics = parseStats()
         lastModified = statistics?.lastModified ?: LastSeen ?: 0
