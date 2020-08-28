@@ -9,7 +9,13 @@ import com.odbol.wear.airquality.purpleair.Sensor
 import java.util.*
 import java.util.function.Consumer
 
-class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerView.Adapter<SensorsAdapter.SensorViewHolder>() {
+/**
+ * Item types.
+ */
+const val HEADER = 1
+const val ITEM = 2
+
+class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerView.Adapter<SensorsAdapter.ItemViewHolder>() {
 
     var sensors: List<Sensor> = Collections.emptyList()
         set(value) {
@@ -17,20 +23,36 @@ class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerVi
             notifyDataSetChanged()
         }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SensorViewHolder {
-        val item = LayoutInflater.from(parent.context).inflate(R.layout.sensor_item, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
+        if (viewType == ITEM) {
+            val item = LayoutInflater.from(parent.context).inflate(R.layout.sensor_item, parent, false)
 
-        return SensorViewHolder(item)
+            return SensorViewHolder(item)
+        } else {
+
+            val item = LayoutInflater.from(parent.context).inflate(R.layout.header_item, parent, false)
+
+            return ItemViewHolder(item)
+        }
     }
 
-    override fun getItemCount() = sensors.size
+    override fun getItemCount() = sensors.size + 1
 
-    override fun onBindViewHolder(holder: SensorViewHolder, position: Int) {
-        holder.bind(sensors[position])
+    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
+        if (getItemViewType(position) == ITEM) {
+            (holder as SensorViewHolder).bind(sensors[position - 1])
+        }
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return if (position == 0) HEADER else ITEM
+    }
 
-    inner class SensorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    open inner class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+    }
+
+    inner class SensorViewHolder(itemView: View) : ItemViewHolder(itemView) {
         private val title = itemView.findViewById<TextView>(R.id.title)
         private val subtitle = itemView.findViewById<TextView>(R.id.subtitle)
         private val aqi = itemView.findViewById<TextView>(R.id.aqi)
@@ -44,14 +66,14 @@ class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerVi
 
             itemView.setOnClickListener {
                 sensors
-                        .filter { it.isSelected }
-                        .forEach{it.isSelected = false}
+                        .forEach{ it.isSelected = false }
 
                 sensor.isSelected = true
 
                 this@SensorsAdapter.onSensorClicked.accept(sensor)
 
-                notifyItemChanged(adapterPosition)
+//                notifyItemChanged(adapterPosition)
+                notifyDataSetChanged()
             }
         }
 

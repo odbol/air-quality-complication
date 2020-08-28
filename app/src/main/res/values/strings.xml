@@ -11,4 +11,6 @@
     <string name="hello_world">Loading sensors from PurpleAir.com…</string>
     <string name="location_error">Error retrieving sensors. Please try again.</string>
     <string name="several_minutes">(This may take 5–10 minutes)</string>
+    <string name="choose_sensor">Choose sensor</string>
+    <string name="choose_sensor_instructions">To show in your complication</string>
 </resources>
