@@ -39,6 +39,8 @@ import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -50,7 +52,7 @@ public class AirQualityActivity extends FragmentActivity {
 
     private static final String TAG = "AirQualityActivity";
 
-    int MAX_SENSORS_IN_LIST = 50;
+    int MAX_SENSORS_IN_LIST = 100;
 
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
@@ -89,17 +91,19 @@ public class AirQualityActivity extends FragmentActivity {
                 .subscribeOn(Schedulers.io())
                 .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
                 .flatMap(purpleAir::findSensorsForLocation)
+                .take(MAX_SENSORS_IN_LIST)
                 .map(sensor -> {
                     if (sensor.getID() == selectedSensorId) {
                         sensor.setSelected(true);
                     }
                     return sensor;
                 })
+
                 .toSortedList((a, b) -> {
                     if (a.isSelected()) return 1;
                     if (b.isSelected()) return -1;
                     return 0;
-                }, 5000)
+                }, MAX_SENSORS_IN_LIST)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     // onNext

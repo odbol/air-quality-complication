@@ -68,9 +68,11 @@ open class PurpleAir(context: Context) {
                 override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
                     if (response.isSuccessful && response.body() != null) {
                         response.body()!!.results.forEach { d ->
-                            Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
+                            //Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
                             if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
                                 emitter.onNext(d)
+                            } else {
+                                Log.w(TAG, "Got invalid sensor $d")
                             }
                         }
                         emitter.onComplete()
