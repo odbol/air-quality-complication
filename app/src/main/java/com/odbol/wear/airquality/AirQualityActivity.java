@@ -52,7 +52,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private static final String TAG = "AirQualityActivity";
 
-    private static final long PROGRESS_UPDATE_INTERVAL_SECONDS = 2;
+    private static final long PROGRESS_UPDATE_INTERVAL_SECONDS = 3;
     private static final long PROGRESS_UPDATE_TOTAL_SECONDS = TimeUnit.MINUTES.toSeconds(5);
 
     int MAX_SENSORS_IN_LIST = 100;
@@ -108,7 +108,10 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .subscribeOn(Schedulers.io())
                     .flatMap((isGranted) -> rxLocation.location().updates(createLocationRequest()))
                     .debounce(3, TimeUnit.SECONDS)
-                    .flatMap(this::findSensorsForLocation)
+                    .take(1)
+                    .singleOrError()
+                    .zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
+                    .flatMapObservable(this::findSensorsForLocation)
                     .take(MAX_SENSORS_IN_LIST)
                     .map(sensor -> {
                         if (sensor.getID() == selectedSensorId) {
@@ -136,6 +139,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                         (error) -> {
                             Log.e(TAG, "Error:", error);
                             textView.setText(R.string.location_error);
+                            progressBar.setVisibility(View.INVISIBLE);
                             doneLoading();
                         }
                     )
