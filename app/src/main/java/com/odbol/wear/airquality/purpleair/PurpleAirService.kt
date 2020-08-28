@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.location.Location
 import android.util.Log
 import com.google.gson.GsonBuilder
+import com.odbol.wear.airquality.R
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
 import io.reactivex.schedulers.Schedulers
@@ -79,8 +80,8 @@ open class PurpleAir(context: Context) {
     val allSensorsDownloader = AllSensorsDownloader(context)
 
     open fun getAllSensors(): Single<List<Sensor>> {
+          // Using retrofit is much too slow.
 //        return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
-//            // Using retrofit is much too slow.
 ////            service.allSensors()!!.enqueue(object : Callback<SensorResult?> {
 ////
 ////                override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
@@ -169,7 +170,7 @@ class AllSensorsDownloader(private val context: Context) {
             return loadFile()
         } else if (progress < 0) {
             Log.d(TAG, "Starting download")
-            dm.startDownload(PURPLE_AIR_BASE_URL + "json", file, "Downloading Sensors from PurpleAir")
+            dm.startDownload(PURPLE_AIR_BASE_URL + "json", file, context.getString(R.string.app_name))
         }
 
         return Single.using({
