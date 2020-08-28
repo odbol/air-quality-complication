@@ -83,7 +83,7 @@ open class PurpleAir(context: Context) {
 
     val allSensorsDownloader = AllSensorsDownloader(context)
 
-    open fun getAllSensors(): Observable<Sensor> {
+    open fun getAllSensors(): Single<List<Sensor>> {
 //        return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
 //            // Using retrofit is much too slow.
 ////            service.allSensors()!!.enqueue(object : Callback<SensorResult?> {
@@ -106,17 +106,18 @@ open class PurpleAir(context: Context) {
 //        }
         return allSensorsDownloader.getAllSensors()
         .subscribeOn(Schedulers.io())
-        .flatMapObservable { results ->
-            Observable.create { emitter: Emitter<Sensor> ->
+        .flatMap { results ->
+            Single.create { emitter: SingleEmitter<List<Sensor>> ->
+                val valids = ArrayList<Sensor>(results.size)
                 results.forEach { d ->
                     //Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
                     if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
-                        emitter.onNext(d)
+                        valids.add(d)
                     } else {
                         Log.w(TAG, "Got invalid sensor $d")
                     }
                 }
-                emitter.onComplete()
+                emitter.onSuccess(valids)
             }
             .subscribeOn(Schedulers.computation())
         }

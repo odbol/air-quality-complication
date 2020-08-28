@@ -39,9 +39,11 @@ import com.odbol.wear.airquality.purpleair.Sensor;
 import com.patloew.rxlocation.RxLocation;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -112,19 +114,25 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .take(1)
                     .singleOrError()
                     //.zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
-                    .flatMapObservable(this::findSensorsForLocation)
-                    .take(MAX_SENSORS_IN_LIST)
-                    .map(sensor -> {
-                        if (sensor.getID() == selectedSensorId) {
-                            sensor.setSelected(true);
-                        }
-                        return sensor;
-                    })
-                    .toSortedList((a, b) -> {
-                        if (a.isSelected()) return 1;
-                        if (b.isSelected()) return -1;
-                        return 0;
-                    }, MAX_SENSORS_IN_LIST)
+                    .zipWith(purpleAir.getAllSensors(), (location, sensors) -> findSensorsForLocation(location, sensors)
+                            .map(sensors1 -> sensors1.subList(0, MAX_SENSORS_IN_LIST)).map(sensors1 -> {
+                                for (Sensor sensor : sensors1) {
+                                    if (sensor.getID() == selectedSensorId) {
+                                        sensor.setSelected(true);
+                                    }
+                                }
+                                return sensors1;
+                            })
+                            .map(sensors1 -> {
+                                sensors1.sort((a, b) -> {
+                                    if (a.isSelected()) return 1;
+                                    if (b.isSelected()) return -1;
+                                    return 0;
+                                });
+                                return sensors1;
+                            }))
+                            .blockingGet()
+
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                         // onNext
@@ -147,16 +155,19 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         );
     }
 
-    private Observable<Sensor> findSensorsForLocation(Location location) {
-        return purpleAir.getAllSensors()
+    private Single<List<Sensor>> findSensorsForLocation(Location location, List<Sensor> sensors) {
+        return Single.just(sensors)
                 .subscribeOn(Schedulers.io())
-                .doOnNext((s) -> progressBar.post(() -> {
+                .doOnSuccess((s) -> progressBar.post(() -> {
                     //Log.d(TAG, "Done loading sensors " + progressBar.getProgress());
                     if (getProgressPercentage() < 0.8) {
                         progressBar.setProgress((int) (0.8 * (float)progressBar.getMax()), true);
                     }
                 }))
-                .sorted(sortByClosest(location));
+                .map(s -> {
+                    s.sort(sortByClosest(location));
+                    return s;
+                });
     }
 
     private void onSensorSelected(Sensor sensor) {
