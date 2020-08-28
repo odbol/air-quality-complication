@@ -40,6 +40,8 @@ import com.odbol.wear.airquality.purpleair.Sensor;
 import com.patloew.rxlocation.FusedLocation;
 import com.patloew.rxlocation.RxLocation;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -120,7 +122,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_SHORT_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                                .setShortTitle(getTimeAgo(sensor.getLastModified()).build())
+                                .setShortTitle(getTimeAgo(sensor))
                                 .setShortText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
@@ -130,7 +132,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_LONG_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
-                                .setLongTitle(getTimeAgo(sensor.getLastModified()).build())
+                                .setLongTitle(getTimeAgo(sensor))
                                 .setLongText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
@@ -140,11 +142,11 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_RANGED_VALUE:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_RANGED_VALUE)
-                                .setShortTitle(getTimeAgo(sensor.getLastModified()).build())
+                                .setShortTitle(getTimeAgo(sensor))
                                 .setShortText(getAqi(sensor))
                                 .setMinValue(0)
                                 .setMaxValue(500)
-                                .setValue(Math.min(500, AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI()))
+                                .setValue(Math.min(500, getAqiValue(sensor)))
                                 .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
                                 .setTapAction(getTapAction())
@@ -165,8 +167,20 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
         }
     }
 
+    private int getAqiValue(Sensor sensor) {
+        if (sensor == null) return 0;
+        return AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI();
+    }
+
+    @NotNull
+    private ComplicationText getTimeAgo(Sensor sensor) {
+        if (sensor == null) return ComplicationText.plainText("--");
+        return getTimeAgo(sensor.getLastModified()).build();
+    }
+
     private ComplicationText getAqi(Sensor sensor) {
-        return ComplicationText.plainText(String.valueOf(AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI()));
+        if (sensor == null) return ComplicationText.plainText("--");
+        return ComplicationText.plainText(String.valueOf(getAqiValue(sensor)));
     }
 
     private PendingIntent getTapAction() {
@@ -179,7 +193,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
         if (sensor == null) return ComplicationText.plainText(getString(R.string.no_location));
 
         return getTimeAgo(sensor.getLastModified())
-                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, AqiUtils.convertPm25ToAqi(sensor.getPm25()).getAQI(), "^1"))
+                .setSurroundingText(getString(R.string.aqi_as_of_time_ago, getAqiValue(sensor), "^1"))
                 .build();
     }
 
@@ -193,12 +207,6 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
         String thoroughfare = address.getThoroughfare();
         if (thoroughfare == null) return address.toString();
         return (TextUtils.isEmpty(subThoroughfare) ? "" : subThoroughfare +  " ") + thoroughfare;
-    }
-
-
-    private ComplicationText getTimeAgo(Location location) {
-        if (location == null) return ComplicationText.plainText("--");
-        return getTimeAgo(location.getTime()).build();
     }
 
     private ComplicationText.TimeDifferenceBuilder getTimeAgo(long fromTime) {
