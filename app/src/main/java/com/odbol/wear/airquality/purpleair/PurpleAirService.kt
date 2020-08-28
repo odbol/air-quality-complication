@@ -6,6 +6,7 @@ import android.util.Log
 import io.reactivex.Emitter
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.SingleEmitter
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -74,7 +75,7 @@ open class PurpleAir(context: Context) {
                         }
                         emitter.onComplete()
                     } else {
-                        emitter.onError(Exception("Error ${response.code()}: ${response.errorBody()}"))
+                        emitter.onError(Exception("Error ${response.code()}: ${response.message()}. ${response.errorBody()?.string()}"))
                     }
                 }
 
@@ -95,6 +96,31 @@ open class PurpleAir(context: Context) {
         } catch (e: NullPointerException) {
             Log.e(TAG, "Got invalid sensor coordinates for $sensor")
             Float.MAX_VALUE
+        }
+    }
+
+    fun loadSensor(sensorId: Int): Single<Sensor> {
+        return Single.create { emitter: SingleEmitter<Sensor> ->
+            service.sensor(sensorId)!!.enqueue(object : Callback<SensorResult?> {
+
+                override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        response.body()!!.results.forEach { d ->
+                            Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
+                            if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
+                                emitter.onSuccess(d)
+                                return@forEach
+                            }
+                        }
+                    } else {
+                        emitter.onError(Exception("Error ${response.code()}: ${response.message()}. ${response.errorBody()?.string()}"))
+                    }
+                }
+
+                override fun onFailure(call: Call<SensorResult?>, t: Throwable) {
+                    emitter.onError(t)
+                }
+            })
         }
     }
 }

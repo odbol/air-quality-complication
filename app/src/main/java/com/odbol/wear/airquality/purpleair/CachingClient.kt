@@ -56,7 +56,7 @@ class CachingClient(private val context: Context) {
                 *  The 'max-stale' attribute is responsible for this behavior.
                 *  The 'only-if-cached' attribute indicates to not retrieve new data; fetch the cache only instead.
                 */
-                        request.newBuilder().header("Cache-Control", "public, only-if-cached, max-stale=" + 60 * 60 * 24 * 60).build()
+                        request.newBuilder().header("Cache-Control", "public, max-stale=" + 60 * 60 * 24 * 60).build()
                     // End of if-else statement
 
                     // Add the modified request to the chain.

@@ -34,6 +34,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.odbol.wear.airquality.AqiUtils;
 import com.odbol.wear.airquality.R;
 import com.odbol.wear.airquality.AirQualityActivity;
+import com.odbol.wear.airquality.SensorStore;
 import com.odbol.wear.airquality.purpleair.PurpleAir;
 import com.odbol.wear.airquality.purpleair.Sensor;
 import com.patloew.rxlocation.FusedLocation;
@@ -54,11 +55,13 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     private final CompositeDisposable subscriptions = new CompositeDisposable();
 
     private PurpleAir purpleAir;
+    private SensorStore sensorStore;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        sensorStore = new SensorStore(this);
         purpleAir = new PurpleAir(this);
         rxLocation = new RxLocation(this);
     }
@@ -75,19 +78,22 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             Log.d(TAG, "onComplicationUpdate() id: " + complicationId);
         }
 
-        final Observable<Sensor> task;
-        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            FusedLocation locationProvider = rxLocation.location();
-            task = locationProvider
-                    .isLocationAvailable()
-                    .subscribeOn(Schedulers.io())
-                    .flatMapObservable((hasLocation) -> hasLocation ?
-                            locationProvider.lastLocation().toObservable() :
-                            locationProvider.updates(createLocationRequest()))
-                    .flatMapSingle(purpleAir::findSensorForLocation)
+        final Single<Sensor> task;
+        int sensorId = sensorStore.getSelectedSensorId();
+        if (sensorId >= 0) {
+////            FusedLocation locationProvider = rxLocation.location();
+////            task = locationProvider
+////                    .isLocationAvailable()
+////                    .subscribeOn(Schedulers.io())
+////                    .flatMapObservable((hasLocation) -> hasLocation ?
+////                            locationProvider.lastLocation().toObservable() :
+////                            locationProvider.updates(createLocationRequest()))
+//                    .flatMapSingle(purpleAir::getSensor())
+//                    .map(AqiUtils::throwIfInvalid);
+            task = purpleAir.loadSensor(sensorId)
                     .map(AqiUtils::throwIfInvalid);
         } else {
-            task = Observable.error(new SecurityException("No location permission!"));
+            task = Single.error(new SecurityException("No sensor selected"));
         }
 
         subscriptions.add(
