@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.wear.ambient.AmbientModeSupport;
 import android.support.wearable.complications.ProviderUpdateRequester;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -40,20 +41,18 @@ import com.tbruyelle.rxpermissions2.RxPermissions;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.odbol.wear.airquality.purpleair.PurpleAirServiceKt.sortByClosest;
 
-public class AirQualityActivity extends FragmentActivity {
+public class AirQualityActivity extends FragmentActivity implements AmbientModeSupport.AmbientCallbackProvider {
 
     private static final String TAG = "AirQualityActivity";
 
-    private static final long PROGRESS_UPDATE_INTERVAL_SECONDS = 1;
-    private static final long PROGRESS_UPDATE_TOTAL_SECONDS = TimeUnit.MINUTES.toSeconds(2);
+    private static final long PROGRESS_UPDATE_INTERVAL_SECONDS = 2;
+    private static final long PROGRESS_UPDATE_TOTAL_SECONDS = TimeUnit.MINUTES.toSeconds(5);
 
     int MAX_SENSORS_IN_LIST = 100;
 
@@ -73,11 +72,19 @@ public class AirQualityActivity extends FragmentActivity {
 
     private SensorStore sensorStore;
 
+    /*
+     * Declare an ambient mode controller, which will be used by
+     * the activity to determine if the current mode is ambient.
+     */
+    private AmbientModeSupport.AmbientController ambientController;
+
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.where_am_i_activity);
+
+        ambientController = AmbientModeSupport.attach(this);
 
         purpleAir = new PurpleAir(this);
         sensorStore = new SensorStore(this);
@@ -139,29 +146,11 @@ public class AirQualityActivity extends FragmentActivity {
                 .subscribeOn(Schedulers.io())
                 .doOnNext((s) -> progressBar.post(() -> {
                     //Log.d(TAG, "Done loading sensors " + progressBar.getProgress());
-                    if (progressBar.getProgress() < 60) {
-                        progressBar.setProgress(60, true);
+                    if (getProgressPercentage() < 0.8) {
+                        progressBar.setProgress((int) (0.8 * (float)progressBar.getMax()), true);
                     }
                 }))
                 .sorted(sortByClosest(location));
-    }
-
-    private void doneLoading() {
-        loadingView.setKeepScreenOn(false);
-
-        loadingSubscription.clear();
-    }
-
-    private void startLoading() {
-        loadingView.setKeepScreenOn(true);
-        progressBar.setProgress(0);
-
-        loadingSubscription.clear();
-
-        loadingSubscription.add(Observable.interval(PROGRESS_UPDATE_INTERVAL_SECONDS, TimeUnit.SECONDS, Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(time -> progressBar.incrementProgressBy((int) Math.round(/*Math.random() * */(float)progressBar.getMax() * ((float)PROGRESS_UPDATE_INTERVAL_SECONDS / (float)PROGRESS_UPDATE_TOTAL_SECONDS))))
-        );
     }
 
     private void onSensorSelected(Sensor sensor) {
@@ -172,6 +161,7 @@ public class AirQualityActivity extends FragmentActivity {
     @Override
     public void onDestroy() {
         subscriptions.dispose();
+        stopLoadingAnimation();
         super.onDestroy();
     }
 
@@ -207,5 +197,82 @@ public class AirQualityActivity extends FragmentActivity {
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(TimeUnit.SECONDS.toMillis(10))
                 .setSmallestDisplacement(50);
+    }
+
+
+
+
+
+
+
+
+
+
+
+    @Override
+    public AmbientModeSupport.AmbientCallback getAmbientCallback() {
+        return new AmbientModeSupport.AmbientCallback() {
+            @Override
+            public void onEnterAmbient(Bundle ambientDetails) {
+                super.onEnterAmbient(ambientDetails);
+                stopLoadingAnimation();
+            }
+
+            @Override
+            public void onUpdateAmbient() {
+                super.onUpdateAmbient();
+                incrementProgressBar();
+            }
+
+            @Override
+            public void onExitAmbient() {
+                super.onExitAmbient();
+                resumeLoadingAnimation();
+            }
+        };
+    }
+
+    private void doneLoading() {
+        //loadingView.setKeepScreenOn(false);
+
+        stopLoadingAnimation();
+    }
+
+    private void startLoading() {
+        //loadingView.setKeepScreenOn(true);
+        progressBar.setProgress(0);
+
+        resumeLoadingAnimation();
+    }
+
+    private void resumeLoadingAnimation() {
+        stopLoadingAnimation();
+
+        loadingSubscription.add(Observable.interval(PROGRESS_UPDATE_INTERVAL_SECONDS, TimeUnit.SECONDS, Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(time -> incrementProgressBar())
+        );
+    }
+
+    private void stopLoadingAnimation() {
+        loadingSubscription.clear();
+    }
+
+    private void incrementProgressBar() {
+        progressBar.incrementProgressBy((int) Math.round( getProgressRate() * (float)progressBar.getMax() * ((float)PROGRESS_UPDATE_INTERVAL_SECONDS / (float)PROGRESS_UPDATE_TOTAL_SECONDS)));
+    }
+
+    private float getProgressRate() {
+        if (getProgressPercentage() > 0.7) {
+            return 0.1f;
+        }
+        if (getProgressPercentage() > 0.9) {
+            return 0.01f;
+        }
+        return 1f;
+    }
+
+    private float getProgressPercentage() {
+        return (float)progressBar.getProgress() / (float)progressBar.getMax();
     }
 }

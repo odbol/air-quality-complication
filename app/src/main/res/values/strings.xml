@@ -8,6 +8,7 @@
 
     <string name="title_activity_where_am_i">Air Quality</string>
 
-    <string name="hello_world">Loading sensors…</string>
+    <string name="hello_world">Loading sensors from PurpleAir.com…</string>
     <string name="location_error">Error retrieving location</string>
+    <string name="several_minutes">(This may take 5-10 minutes)</string>
 </resources>

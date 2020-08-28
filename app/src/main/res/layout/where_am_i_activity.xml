@@ -20,10 +20,12 @@
             android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="8dp"
             android:gravity="center"
             android:textAlignment="center"
             android:layout_gravity="center_horizontal|center_vertical"
             android:accessibilityLiveRegion="polite"
+            android:textAppearance="?android:textAppearanceLarge"
             android:text="@string/hello_world" />
 
         <ProgressBar
@@ -33,7 +35,16 @@
             android:layout_height="8dp"
             android:layout_margin="4dp"
             android:progress="1"
-            android:max="100" />
+            android:max="10000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:text="@string/several_minutes" />
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView
