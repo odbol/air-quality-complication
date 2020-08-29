@@ -122,7 +122,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
             case ComplicationData.TYPE_SHORT_TEXT:
                 complicationData =
                         new ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                                .setShortTitle(getTimeAgo(sensor))
+                                .setShortTitle(ComplicationText.plainText("AQI"))
                                 .setShortText(getAqi(sensor))
                                 .setContentDescription(getFullDescription(sensor))
                                 .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
