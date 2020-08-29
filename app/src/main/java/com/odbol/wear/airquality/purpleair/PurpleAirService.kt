@@ -161,14 +161,22 @@ class DownloadReceiver(private val downloadId: Long): BroadcastReceiver() {
 class AllSensorsDownloader(private val context: Context) {
     val dm = DownloadManagerRx(context)
 
-    val file = File(context.externalCacheDir, "all_sensors.json")
+    val file = File(context.getExternalFilesDir(null), "all_sensors.json")
 
     fun getAllSensors() : Single<List<Sensor?>> {
         // If it's already going, don't start it again.
-        val progress = dm.getProgress()
+        var progress = dm.getProgress()
         if (progress >= 1) {
-            return loadFile()
-        } else if (progress < 0) {
+            if (file.exists()) {
+                return loadFile()
+            } else {
+                // it was downloaded at once point, but somehow it got deleted. re-download!
+                dm.clearDownloadId()
+                progress = -1.0
+            }
+        }
+
+        if (progress < 0) {
             Log.d(TAG, "Starting download")
             dm.startDownload(PURPLE_AIR_BASE_URL + "json", file, context.getString(R.string.app_name))
         }

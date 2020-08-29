@@ -74,6 +74,10 @@ class DownloadManagerRx(context: Context) {
 
         return -1.0
     }
+
+    fun clearDownloadId() {
+        downloadId = -1
+    }
 //
 //    fun getDownloadedFile() {
 //        downloadManager.getUriForDownloadedFile(downloadId)
