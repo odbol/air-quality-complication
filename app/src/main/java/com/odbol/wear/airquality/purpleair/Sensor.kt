@@ -51,15 +51,40 @@ data class Sensor(val ID: Int,
                   val PM2_5Value: String?,
                   val LastSeen: Long?,
                   val Stats: String?) {
-    val statistics: Statistics?
-    val lastModified: Long
-    val lastSeenMs = if (LastSeen != null) LastSeen * 1000 else 0
+
+    var statistics: Statistics? = null
+        get() {
+            if (field == null) {
+                field = parseStats()
+            }
+            return field
+        }
+        private set
+
+    var lastModified: Long = 0
+        get() {
+            if (field == 0L) {
+                field = statistics?.lastModified ?: lastSeenMs
+            }
+            return field
+        }
+        private set
+
+    var lastSeenMs: Long = 0
+    get() {
+        if (field == 0L) {
+            field = if (LastSeen != null) LastSeen * 1000 else 0
+        }
+        return field
+    }
+    private set
 
     var isSelected = false
 
+    // WARNING: you can't use init here. for some reason gson can get around calling it. WTF Kotlin
+    // see https://stackoverflow.com/a/54769068/473201
     init {
-        statistics = parseStats()
-        lastModified = statistics?.lastModified ?: lastSeenMs
+
     }
 
     private fun parseStats(): Statistics? {
