@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -64,6 +65,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private View loadingView;
     private TextView textView;
+    private TextView hintView;
     private RecyclerView listView;
     private ProgressBar progressBar;
 
@@ -93,6 +95,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         sensorStore = new SensorStore(this);
 
         textView = (TextView) findViewById(R.id.text);
+        hintView = (TextView) findViewById(R.id.hint);
         progressBar = (ProgressBar) findViewById(R.id.progress);
         loadingView = (View) findViewById(R.id.loading);
         listView = (RecyclerView) findViewById(R.id.list);
@@ -112,6 +115,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .debounce(3, TimeUnit.SECONDS)
                     .take(1)
                     .singleOrError()
+                    .timeout(60, TimeUnit.SECONDS, Schedulers.computation(), Single.error(new LocationException("Timed out waiting for location")))
                     //.zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
                     .zipWith(purpleAir.getAllSensors(), (location, sensors) -> findSensorsForLocation(location, sensors))
                     .subscribeOn(Schedulers.computation())
@@ -147,7 +151,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                         // onError
                         (error) -> {
                             Log.e(TAG, "Error:", error);
-                            textView.setText(R.string.location_error);
+                            textView.setText(error instanceof LocationException ? R.string.location_error : R.string.sensor_error);
+                            hintView.setVisibility(View.INVISIBLE);
                             progressBar.setVisibility(View.INVISIBLE);
                             doneLoading();
                         }

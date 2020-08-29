@@ -105,14 +105,19 @@ open class PurpleAir(context: Context) {
             .flatMap { results ->
                 Single.create { emitter: SingleEmitter<List<Sensor>> ->
                     val valids = ArrayList<Sensor>(results.size)
+                    var invalidCount = 0
                     results.forEach { d ->
                         //Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
                         if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
                             valids.add(d)
                         } else {
-                            Log.w(TAG, "Got invalid sensor $d")
+                            invalidCount++
+                            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                                Log.d(TAG, "Got invalid sensor $d")
+                            }
                         }
                     }
+                    Log.d(TAG, "Found ${valids.size} valid sensors and $invalidCount invalid ones")
                     emitter.onSuccess(valids)
                 }
                 .subscribeOn(Schedulers.computation())
