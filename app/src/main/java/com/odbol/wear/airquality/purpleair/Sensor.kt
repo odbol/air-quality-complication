@@ -53,12 +53,13 @@ data class Sensor(val ID: Int,
                   val Stats: String?) {
     val statistics: Statistics?
     val lastModified: Long
+    val lastSeenMs = if (LastSeen != null) LastSeen * 1000 else 0
 
     var isSelected = false
 
     init {
         statistics = parseStats()
-        lastModified = statistics?.lastModified ?: LastSeen ?: 0
+        lastModified = statistics?.lastModified ?: lastSeenMs
     }
 
     private fun parseStats(): Statistics? {
@@ -66,7 +67,7 @@ data class Sensor(val ID: Int,
             return GsonBuilder().create().fromJson(Stats!!, Statistics::class.java)
         } catch (e: NullPointerException) {}
         try {
-            return Statistics(PM2_5Value!!.toDouble(), PM2_5Value!!.toDouble(), LastSeen!!)
+            return Statistics(PM2_5Value!!.toDouble(), PM2_5Value!!.toDouble(), lastSeenMs)
         } catch (e: NullPointerException) {}
 
         return null

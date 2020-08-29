@@ -211,7 +211,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
 
     private ComplicationText.TimeDifferenceBuilder getTimeAgo(long fromTime) {
         return new ComplicationText.TimeDifferenceBuilder()
-                .setStyle(ComplicationText.DIFFERENCE_STYLE_SHORT_WORDS_SINGLE_UNIT)
+                .setStyle(ComplicationText.DIFFERENCE_STYLE_SHORT_SINGLE_UNIT)
                 .setMinimumUnit(TimeUnit.MINUTES)
                 .setReferencePeriodEnd(fromTime)
                 .setShowNowText(true);
