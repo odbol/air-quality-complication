@@ -214,9 +214,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private static LocationRequest createLocationRequest() {
         return LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(TimeUnit.SECONDS.toMillis(10))
-                .setSmallestDisplacement(50);
+                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setInterval(TimeUnit.SECONDS.toMillis(10));
     }
 
 
