@@ -1,10 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/sensorDetails"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
+    <com.mikhaellopez.circularprogressbar.CircularProgressBar
+        android:id="@+id/aqiProgressBarBg"
+        android:alpha="0.3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cpb_background_progressbar_color="#00000000"
+        app:cpb_background_progressbar_width="8dp"
+        app:cpb_progress_direction="to_right"
+        app:cpb_progressbar_color_start="@color/Green"
+        app:cpb_progressbar_color_end="@color/Maroon"
+        app:cpb_progressbar_width="12dp"
+        app:cpb_progress_max="100"
+        app:cpb_progress="83"
+        app:cpb_start_angle="210"
+        app:cpb_round_border="true" />
+
+    <com.mikhaellopez.circularprogressbar.CircularProgressBar
+        android:id="@+id/aqiProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        app:cpb_background_progressbar_color="#00000000"
+        app:cpb_background_progressbar_width="8dp"
+        app:cpb_progress_direction="to_right"
+        app:cpb_progressbar_color="@color/Green"
+        app:cpb_progressbar_width="12dp"
+        app:cpb_progress_max="100"
+        app:cpb_start_angle="210"
+        app:cpb_round_border="true" />
 
     <TextView
         android:id="@+id/aqi"

@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.util.Log
 import com.odbol.wear.airquality.purpleair.PurpleAir
 import com.odbol.wear.airquality.purpleair.Sensor
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import java.util.function.Consumer
 
 const val REQUEST_ID = 3214
@@ -49,6 +51,8 @@ class SensorDetailsActivity: Activity() {
         ui.isLoading = true
         subscriptions.add(
                 purpleAir.loadSensor(sensorId)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe({
                             ui.bind(it)
                             ui.isLoading = false

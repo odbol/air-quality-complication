@@ -49,6 +49,8 @@ dependencies {
 
     implementation 'com.github.thanglequoc:aqi-calculator:1.3.1'
 
+    implementation 'com.mikhaellopez:circularprogressbar:3.0.3'
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 repositories {

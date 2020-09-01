@@ -11,6 +11,7 @@ import com.thanglequoc.aqicalculator.AQIResult;
 import com.thanglequoc.aqicalculator.Pollutant;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import androidx.annotation.ColorInt;
 
@@ -57,5 +58,9 @@ public class AqiUtils {
             throw new Exception("Invalid sensor data");
         }
         return sensor;
+    }
+
+    public static float getPercentage(AQIResult aqiData) {
+        return Math.min(1f, (float)aqiData.getAQI() / (float)500);
     }
 }

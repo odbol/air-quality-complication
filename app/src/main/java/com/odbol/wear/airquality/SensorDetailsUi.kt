@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import com.odbol.wear.airquality.purpleair.Sensor
 
 class SensorDetailsUi(private val parent: ViewGroup) {
@@ -14,6 +15,7 @@ class SensorDetailsUi(private val parent: ViewGroup) {
     private val time = parent.findViewById<TextView>(R.id.time)
     private val progress = parent.findViewById<ProgressBar>(R.id.progress)
     private val settingsButton = parent.findViewById<ImageButton>(R.id.settingsButton)
+    private val aqiProgressBar = parent.findViewById<CircularProgressBar>(R.id.aqiProgressBar)
 
     fun bind(sensor: Sensor) {
         val aqiData = AqiUtils.convertPm25ToAqi(sensor.pm25)
@@ -24,6 +26,9 @@ class SensorDetailsUi(private val parent: ViewGroup) {
 
         val color = AqiUtils.getColor(parent.context, aqiData)
         aqi.setTextColor(color)
+
+        aqiProgressBar.progressBarColor = color
+        aqiProgressBar.progress = AqiUtils.getPercentage(aqiData) * 100
     }
 
     fun onError(it: Throwable?) {
