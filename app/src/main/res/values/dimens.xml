@@ -15,4 +15,5 @@
 
 
     <dimen name="loading_padding">24dp</dimen>
+    <dimen name="button_padding">4dp</dimen>
 </resources>

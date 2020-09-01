@@ -6,12 +6,12 @@
     <string name="sensor_result">AQI: <xliff:g example="50" id="aqi">%1$d</xliff:g> (PM2.5 10 minute avg: <xliff:g example="1.2" id="pm">%1$d</xliff:g>). Last updated <xliff:g example="2 minutes ago" id="time">%2$s</xliff:g></string>
     <string name="no_location">Tap to choose sensor</string>
 
-    <string name="title_activity_where_am_i">Air Quality</string>
-
     <string name="hello_world">Loading sensors from PurpleAir.com…</string>
     <string name="sensor_error">Error retrieving sensors. Please try again.</string>
     <string name="location_error">Error retrieving location. Please try again.</string>
     <string name="several_minutes">(This may take 5–10 minutes)</string>
     <string name="choose_sensor">Choose sensor</string>
     <string name="choose_sensor_instructions">To show in your complication</string>
+    <string name="aqi">AQI</string>
+    <string name="settings">Settings</string>
 </resources>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sensorDetails"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/aqi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/center_spacer"
+        android:layout_marginBottom="8dp"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:textSize="44sp"
+        android:textStyle="bold"
+        android:text="--"
+        tools:text="138"
+        />
+
+    <TextView
+        android:id="@+id/aqi_lavel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/aqi"
+        android:layout_alignBaseline="@id/aqi"
+        android:layout_marginStart="2dp"
+        android:textAppearance="?android:textAppearanceSmall"
+        android:textSize="12sp"
+        android:textColor="@color/text_faint"
+        android:text="@string/aqi" />
+
+<!--    <TextView-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_centerInParent="true"-->
+<!--        android:textAppearance="?android:textAppearanceSmall"-->
+<!--        android:textSize="12sp"-->
+<!--        android:textColor="@color/text_faint"-->
+<!--        android:text="@string/aqi" />-->
+
+    <!-- spacer: has to be ImageView so it works in RemoteViews. -->
+    <ImageView
+        android:id="@+id/center_spacer"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_centerInParent="true"
+        />
+
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignTop="@+id/center_spacer"
+        android:textAppearance="?android:textAppearanceSmall"
+        android:textAlignment="center"
+        android:textColor="@color/text_faint"
+        android:minWidth="64dp"
+        tools:text="9 minutes ago" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="@android:style/Widget.Material.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_below="@+id/time"
+        android:layout_alignStart="@+id/time"
+        android:layout_alignEnd="@+id/time"
+        android:layout_marginTop="2dp"
+        android:indeterminate="true" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/progress"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:textAlignment="center"
+        android:textAppearance="?android:textAppearance"
+        tools:text="East Bay German School"
+        android:maxLines="2"
+        android:ellipsize="end" />
+    
+    <ImageButton
+        android:id="@+id/settingsButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="4dp"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/ic_settings"
+        android:background="@drawable/bg_button"
+        android:contentDescription="@string/settings"
+        />
+
+</RelativeLayout>

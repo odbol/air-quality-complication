@@ -17,6 +17,7 @@ package com.odbol.wear.airquality;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -48,6 +49,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.odbol.wear.airquality.SensorDetailsActivityKt.EXTRA_SENSOR_ID;
 import static com.odbol.wear.airquality.purpleair.PurpleAirServiceKt.sortByClosest;
 
 public class AirQualityActivity extends FragmentActivity implements AmbientModeSupport.AmbientCallbackProvider {
@@ -175,6 +177,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         sensorStore.setSelectedSensorId(sensor.getID());
         forceComplicationUpdate();
 
+        setResult(RESULT_OK, new Intent().putExtra(EXTRA_SENSOR_ID, sensor.getID()));
+
         progressBar.postDelayed(this::finish, 1000);
     }
 
@@ -205,10 +209,6 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     if (isGranted) return true;
                     throw new SecurityException("No location permission");
                 });
-    }
-
-    private CharSequence getTimeAgo(long time) {
-        return DateUtils.getRelativeTimeSpanString(time);
     }
 
 

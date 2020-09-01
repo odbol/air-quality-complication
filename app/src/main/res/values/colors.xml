@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="chip">#9533A2DD</color>
+    <color name="text_faint">#999999</color>
+    <color name="primary">#03A9F4</color>
 
+    <color name="Green">#8BC34A</color>
+    <color name="Yellow">#FFEB3B</color>
+    <color name="Orange">#FF9800</color>
+    <color name="Red">#F44336</color>
+    <color name="Purple">#9C27B0</color>
+    <color name="Maroon">#AF0404</color>
 </resources>

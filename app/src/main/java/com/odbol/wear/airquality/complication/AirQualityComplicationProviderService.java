@@ -34,6 +34,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.odbol.wear.airquality.AqiUtils;
 import com.odbol.wear.airquality.R;
 import com.odbol.wear.airquality.AirQualityActivity;
+import com.odbol.wear.airquality.SensorDetailsActivity;
 import com.odbol.wear.airquality.SensorStore;
 import com.odbol.wear.airquality.purpleair.PurpleAir;
 import com.odbol.wear.airquality.purpleair.Sensor;
@@ -184,7 +185,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     }
 
     private PendingIntent getTapAction() {
-        Intent intent = new Intent(this, AirQualityActivity.class)
+        Intent intent = new Intent(this, SensorDetailsActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
