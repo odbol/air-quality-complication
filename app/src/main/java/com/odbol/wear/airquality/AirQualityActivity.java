@@ -32,6 +32,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.LocationRequest;
 import com.odbol.wear.airquality.complication.AirQualityComplicationProviderService;
@@ -178,6 +179,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         forceComplicationUpdate();
 
         setResult(RESULT_OK, new Intent().putExtra(EXTRA_SENSOR_ID, sensor.getID()));
+
+        Toast.makeText(this, R.string.complication_set, Toast.LENGTH_SHORT).show();
 
         progressBar.postDelayed(this::finish, 1000);
     }
