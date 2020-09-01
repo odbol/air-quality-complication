@@ -5,11 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import com.odbol.wear.airquality.purpleair.PurpleAir
-import com.odbol.wear.airquality.purpleair.Sensor
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import java.util.function.Consumer
 
 const val REQUEST_ID = 3214
 const val EXTRA_SENSOR_ID = "EXTRA_SENSOR_ID"
@@ -32,13 +30,17 @@ class SensorDetailsActivity: Activity() {
         purpleAir = PurpleAir(this)
         sensorStore = SensorStore(this)
 
-        ui = SensorDetailsUi(findViewById(R.id.sensorDetails))
+        ui = SensorDetailsUi(findViewById(R.id.sensorDetails), this::startSensorPickerActivity)
 
         if (sensorStore.selectedSensorId < 0) {
-            startActivityForResult(Intent(this, AirQualityActivity::class.java), REQUEST_ID)
+            startSensorPickerActivity()
         } else {
             loadSensor(sensorStore.selectedSensorId)
         }
+    }
+
+    private fun startSensorPickerActivity() {
+        startActivityForResult(Intent(this, AirQualityActivity::class.java), REQUEST_ID)
     }
 
     override fun onResume() {

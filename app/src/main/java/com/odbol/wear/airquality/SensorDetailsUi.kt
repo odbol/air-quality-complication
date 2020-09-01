@@ -8,7 +8,7 @@ import android.widget.TextView
 import com.mikhaellopez.circularprogressbar.CircularProgressBar
 import com.odbol.wear.airquality.purpleair.Sensor
 
-class SensorDetailsUi(private val parent: ViewGroup) {
+class SensorDetailsUi(private val parent: ViewGroup, onSettingsClick: () -> Unit) {
 
     private val title = parent.findViewById<TextView>(R.id.title)
     private val aqi = parent.findViewById<TextView>(R.id.aqi)
@@ -16,6 +16,12 @@ class SensorDetailsUi(private val parent: ViewGroup) {
     private val progress = parent.findViewById<ProgressBar>(R.id.progress)
     private val settingsButton = parent.findViewById<ImageButton>(R.id.settingsButton)
     private val aqiProgressBar = parent.findViewById<CircularProgressBar>(R.id.aqiProgressBar)
+
+    init {
+        settingsButton.setOnClickListener{
+            onSettingsClick()
+        }
+    }
 
     fun bind(sensor: Sensor) {
         val aqiData = AqiUtils.convertPm25ToAqi(sensor.pm25)
