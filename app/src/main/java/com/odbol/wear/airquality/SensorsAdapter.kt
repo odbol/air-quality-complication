@@ -14,6 +14,7 @@ import java.util.function.Consumer
  */
 const val HEADER = 1
 const val ITEM = 2
+const val FOOTER = 3
 
 class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerView.Adapter<SensorsAdapter.ItemViewHolder>() {
 
@@ -28,15 +29,18 @@ class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerVi
             val item = LayoutInflater.from(parent.context).inflate(R.layout.sensor_item, parent, false)
 
             return SensorViewHolder(item)
-        } else {
+        } else if (viewType == FOOTER) {
+            val item = LayoutInflater.from(parent.context).inflate(R.layout.footer_item, parent, false)
 
+            return ItemViewHolder(item)
+        } else {
             val item = LayoutInflater.from(parent.context).inflate(R.layout.header_item, parent, false)
 
             return ItemViewHolder(item)
         }
     }
 
-    override fun getItemCount() = sensors.size + 1
+    override fun getItemCount() = sensors.size + 2
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         if (getItemViewType(position) == ITEM) {
@@ -45,7 +49,7 @@ class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerVi
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == 0) HEADER else ITEM
+        return if (position == 0) HEADER else if (position == itemCount - 1) FOOTER else ITEM
     }
 
     open inner class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
