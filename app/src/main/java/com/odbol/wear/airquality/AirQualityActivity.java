@@ -120,7 +120,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .singleOrError()
                     .timeout(60, TimeUnit.SECONDS, Schedulers.computation(), Single.error(new LocationException("Timed out waiting for location")))
                     //.zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
-                    .zipWith(purpleAir.getAllSensors(), (location, sensors) -> findSensorsForLocation(location, sensors))
+                    .zipWith(purpleAir.getAllSensors(), this::findSensorsForLocation)
                     .subscribeOn(Schedulers.computation())
                     .observeOn(Schedulers.computation())
                     .map(sensors -> sensors.subList(0, MAX_SENSORS_IN_LIST))
