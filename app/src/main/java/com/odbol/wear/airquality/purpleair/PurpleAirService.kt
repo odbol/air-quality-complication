@@ -34,9 +34,10 @@ const val PURPLE_AIR_BASE_URL = "https://api.purpleair.com/v1/"
 
 
 fun sortByClosest(location: Location): Comparator<Sensor> {
+    val calculator = DistanceCalculator(location)
     return Comparator<Sensor> { a, b ->
         // Multiply so small differences are counted after rounding.
-        val dist = (calculateDistanceTo(location, a) - calculateDistanceTo(location, b)) * 10000
+        val dist = (calculator.calculateDistanceTo(a) - calculator.calculateDistanceTo(b)) * 10000
         if (dist > 0) {
             ceil(dist).toInt()
         } else {
@@ -45,16 +46,28 @@ fun sortByClosest(location: Location): Comparator<Sensor> {
     }
 }
 
-private val tempLocation = Location("PurpleAir")
-private fun calculateDistanceTo(location: Location, sensor: Sensor?): Float {
-    return try {
-        tempLocation.latitude = sensor!!.latitude!!
-        tempLocation.longitude = sensor!!.longitude!!
-        tempLocation.time = System.currentTimeMillis()
-        location.distanceTo(tempLocation)
-    } catch (e: NullPointerException) {
-        Log.e(TAG, "Got invalid sensor coordinates for $sensor")
-        Float.MAX_VALUE
+private class DistanceCalculator(private val location: Location) {
+    private val tempLocation = Location("PurpleAir")
+
+    private val distanceCache: MutableMap<Sensor, Float> = mutableMapOf()
+
+    fun calculateDistanceTo(sensor: Sensor?): Float {
+        try {
+            val dist = distanceCache[sensor]
+            if (dist != null) return dist
+
+            tempLocation.latitude = sensor!!.latitude!!
+            tempLocation.longitude = sensor!!.longitude!!
+            tempLocation.time = System.currentTimeMillis()
+            val distanceTo = location.distanceTo(tempLocation)
+
+            distanceCache[sensor] = distanceTo
+
+            return distanceTo
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "Got invalid sensor coordinates for $sensor")
+            return Float.MAX_VALUE
+        }
     }
 }
 
@@ -177,6 +190,8 @@ open class PurpleAir(context: Context) {
 
     open fun getAllSensors(location: Location): Single<List<Sensor>> {
         return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
+            Log.d(TAG, "getAllSensors $location");
+
             service.allSensors(
                 fields = REQUIRED_FIELDS,
                 northwestLat = location.latitude + 1,
@@ -184,12 +199,12 @@ open class PurpleAir(context: Context) {
                 southeastLat = location.latitude - 1,
                 southeastLon = location.longitude + 1,
                 )!!.enqueue(object : Callback<SensorsResult?> {
-
                 override fun onResponse(call: Call<SensorsResult?>, response: Response<SensorsResult?>) {
                     Log.d(TAG, "getAllSensors ${call.request().url()}");
                     if (response.isSuccessful && response.body() != null) {
                         emitter.onSuccess(response.body()!!.sensors)
                     } else {
+                        Log.e(TAG, "getAllSensors error $response")
                         emitter.onError(Exception("Error ${response.code()}: ${response.message()}. ${response.errorBody()?.string()}"))
                     }
                 }
