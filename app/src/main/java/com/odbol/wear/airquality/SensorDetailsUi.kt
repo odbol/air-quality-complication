@@ -26,9 +26,9 @@ class SensorDetailsUi(private val parent: ViewGroup, onSettingsClick: () -> Unit
     fun bind(sensor: Sensor) {
         val aqiData = AqiUtils.convertPm25ToAqi(sensor.pm25)
 
-        title.text = sensor.Label
+        title.text = sensor.name
         aqi.text = aqiData.aqi.toString()
-        time.text = AqiUtils.getTimeAgo(sensor.lastModified)
+        time.text = AqiUtils.getTimeAgo(sensor.lastSeenSeconds)
 
         val color = AqiUtils.getColor(parent.context, aqiData)
         aqi.setTextColor(color)

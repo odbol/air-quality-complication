@@ -120,10 +120,14 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                     .singleOrError()
                     .timeout(60, TimeUnit.SECONDS, Schedulers.computation(), Single.error(new LocationException("Timed out waiting for location")))
                     //.zipWith(new WifiNetworkRequester(this).requestWifi(), (location, isWifiConnected) -> location)
-                    .zipWith(purpleAir.getAllSensors(), this::findSensorsForLocation)
+                    //.zipWith(purpleAir.getAllSensors(), this::findSensorsForLocation)
+                    .flatMap(location ->
+                        purpleAir.getAllSensors(location)
+                                .map(sensors -> findSensorsForLocation(location, sensors))
+                    )
                     .subscribeOn(Schedulers.computation())
                     .observeOn(Schedulers.computation())
-                    .map(sensors -> sensors.subList(0, MAX_SENSORS_IN_LIST))
+                    .map(sensors -> sensors.size() > MAX_SENSORS_IN_LIST ? sensors.subList(0, MAX_SENSORS_IN_LIST) : sensors)
                     .map(sensors -> {
                         for (Sensor sensor : sensors) {
                             if (sensor.getID() == selectedSensorId) {
@@ -217,7 +221,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private static LocationRequest createLocationRequest() {
         return LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
                 .setInterval(TimeUnit.SECONDS.toMillis(10));
     }
 

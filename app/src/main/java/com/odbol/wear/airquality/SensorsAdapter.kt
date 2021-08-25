@@ -62,9 +62,9 @@ class SensorsAdapter(private val onSensorClicked: Consumer<Sensor>) : RecyclerVi
         private val aqi = itemView.findViewById<TextView>(R.id.aqi)
 
         fun bind(sensor: Sensor) {
-            title.text = sensor.Label ?: sensor.ID.toString()
+            title.text = sensor.name ?: sensor.ID.toString()
             aqi.text = "AQI: ${AqiUtils.convertPm25ToAqi(sensor.pm25).aqi}"
-            subtitle.text = "${sensor.DEVICE_LOCATIONTYPE ?: ""} (GPS: ${sensor.Lat}, ${sensor.Lon})"
+            subtitle.text = "${sensor.location_type ?: ""} (GPS: ${sensor.latitude}, ${sensor.longitude})"
 
             itemView.isSelected = sensor.isSelected
 

@@ -25,9 +25,9 @@ public class AqiUtils {
         return result;
     }
 
-    public static CharSequence getTimeAgo(long time) {
-        if (time == 0) return "--";
-        return DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
+    public static CharSequence getTimeAgo(Long timeSeconds) {
+        if (timeSeconds == null || timeSeconds == 0) return "--";
+        return DateUtils.getRelativeTimeSpanString(timeSeconds * 1000, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
     }
 
     @ColorInt

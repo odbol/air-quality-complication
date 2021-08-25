@@ -14,41 +14,32 @@
 
 package com.odbol.wear.airquality.complication;
 
-import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.drawable.Icon;
 import android.location.Address;
-import android.location.Location;
 import android.support.wearable.complications.ComplicationData;
 import android.support.wearable.complications.ComplicationManager;
 import android.support.wearable.complications.ComplicationProviderService;
 import android.support.wearable.complications.ComplicationText;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 
-import com.google.android.gms.location.LocationRequest;
 import com.odbol.wear.airquality.AqiUtils;
 import com.odbol.wear.airquality.R;
-import com.odbol.wear.airquality.AirQualityActivity;
 import com.odbol.wear.airquality.SensorDetailsActivity;
 import com.odbol.wear.airquality.SensorStore;
 import com.odbol.wear.airquality.purpleair.PurpleAir;
 import com.odbol.wear.airquality.purpleair.Sensor;
-import com.patloew.rxlocation.FusedLocation;
 import com.patloew.rxlocation.RxLocation;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 
 public class AirQualityComplicationProviderService extends ComplicationProviderService {
 
@@ -176,7 +167,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     @NotNull
     private ComplicationText getTimeAgo(Sensor sensor) {
         if (sensor == null) return ComplicationText.plainText("--");
-        return getTimeAgo(sensor.getLastModified()).build();
+        return getTimeAgo(sensor.getLastSeenSeconds()).build();
     }
 
     private ComplicationText getAqi(Sensor sensor) {
@@ -193,7 +184,7 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     private ComplicationText getFullDescription(Sensor sensor) {
         if (sensor == null) return ComplicationText.plainText(getString(R.string.no_location));
 
-        return getTimeAgo(sensor.getLastModified())
+        return getTimeAgo(sensor.getLastSeenSeconds())
                 .setSurroundingText(getString(R.string.aqi_as_of_time_ago, getAqiValue(sensor), "^1"))
                 .build();
     }
@@ -210,11 +201,11 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
         return (TextUtils.isEmpty(subThoroughfare) ? "" : subThoroughfare +  " ") + thoroughfare;
     }
 
-    private ComplicationText.TimeDifferenceBuilder getTimeAgo(long fromTime) {
+    private ComplicationText.TimeDifferenceBuilder getTimeAgo(Long fromTime) {
         return new ComplicationText.TimeDifferenceBuilder()
                 .setStyle(ComplicationText.DIFFERENCE_STYLE_SHORT_SINGLE_UNIT)
                 .setMinimumUnit(TimeUnit.MINUTES)
-                .setReferencePeriodEnd(fromTime)
+                .setReferencePeriodEnd(fromTime == null ? 0 : fromTime)
                 .setShowNowText(true);
     }
 }

@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
 import android.util.Log
-import com.google.gson.GsonBuilder
+import com.google.gson.*
 import com.odbol.wear.airquality.R
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
@@ -19,16 +19,19 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 import java.io.File
 import java.io.FileReader
+import java.lang.reflect.Type
 import kotlin.math.ceil
 import kotlin.math.floor
 
 
 const val TAG = "PurpleAir"
 
-const val PURPLE_AIR_BASE_URL = "https://www.purpleair.com/"
+const val PURPLE_AIR_BASE_URL = "https://api.purpleair.com/v1/"
+
 
 fun sortByClosest(location: Location): Comparator<Sensor> {
     return Comparator<Sensor> { a, b ->
@@ -45,8 +48,8 @@ fun sortByClosest(location: Location): Comparator<Sensor> {
 private val tempLocation = Location("PurpleAir")
 private fun calculateDistanceTo(location: Location, sensor: Sensor?): Float {
     return try {
-        tempLocation.latitude = sensor!!.Lat!!
-        tempLocation.longitude = sensor!!.Lon!!
+        tempLocation.latitude = sensor!!.latitude!!
+        tempLocation.longitude = sensor!!.longitude!!
         tempLocation.time = System.currentTimeMillis()
         location.distanceTo(tempLocation)
     } catch (e: NullPointerException) {
@@ -56,51 +59,149 @@ private fun calculateDistanceTo(location: Location, sensor: Sensor?): Float {
 }
 
 interface PurpleAirService {
-    @GET("json")
-    fun allSensors(): Call<SensorResult>?
+    @GET("sensors")
+    fun allSensors(@Query("fields") fields: String,
+                   @Query("nwlng") northwestLon: Double,
+                   @Query("nwlat") northwestLat: Double,
+                   @Query("selng") southeastLon: Double,
+                   @Query("selat") southeastLat: Double,
+    ): Call<SensorsResult>?
 
-    @GET("json")
-    fun sensor(@Query("show") sensorId: Int): Call<SensorResult>?
+    @GET("sensors/{sensorId}")
+    fun sensor(@Path("sensorId") sensor_index: Int, @Query("fields") fields: String): Call<SingleSensorResult>?
 }
 
-data class SensorResult(val results: List<Sensor?>)
+data class SingleSensorResult(val sensor: Sensor)
+data class SensorsResult(val sensors: List<Sensor>)
+
+/* example:
+200 success
+{
+"api_version" : "V1.0.9-0.0.11",
+"time_stamp" : 1629848809,
+"data_time_stamp" : 1629848789,
+"max_age" : 604800,
+"firmware_default_version" : "6.01",
+"fields" : [
+"sensor_index",
+"name",
+"location_type",
+"latitude",
+"longitude",
+"position_rating"
+],
+"location_types" : ["outside", "inside"],
+"data" : [
+[20,"Oakdale",0,40.6031,-111.8361,5],
+[47,"OZONE TEST",0,40.4762,-111.8826,5],
+[53,"Lakeshore",0,40.2467,-111.7048,5],
+[74,"Wasatch Commons",0,40.7383,-111.9362,5],
+[77,"Sunnyside",0,40.7508,-111.8253,5],
+[81,"Sherwood Hills 2",0,40.2876,-111.6424,5],
+[179,"Ross Way, Gabriola Island, British Columbia",0,49.1745,-123.8478,5],
+[182,"Jolly Brothers Road, Gabriola Island BC P1",0,49.1601,-123.7423,0]
+...
+ */
+class SensorResultDeserializer: JsonDeserializer<SensorsResult> {
+    override fun deserialize(
+        json: JsonElement?,
+        typeOfT: Type?,
+        context: JsonDeserializationContext?
+    ): SensorsResult? {
+        if (json == null) return null
+
+        try {
+            val obj = json.asJsonObject
+            val fields = obj.getAsJsonArray("fields").map { it.asString }
+            val location_types = obj.getAsJsonArray("location_types").map { it.asString }
+            val data = obj.getAsJsonArray("data").map { it.asJsonArray }
+
+            // Yes, we could use reflection here, but we want speed.
+            var sensor_indexIndex: Int = -1
+            var nameIndex: Int = -1
+            var location_typeIndex: Int = -1
+            var latitudeIndex: Int = -1
+            var longitudeIndex: Int = -1
+            var pm25Index: Int = -1
+            fields.forEachIndexed { index: Int, fieldName: String ->
+                when (fieldName) {
+                    "sensor_index" -> sensor_indexIndex = index
+                    "name" -> nameIndex = index
+                    "location_type" -> location_typeIndex = index
+                    "latitude" -> latitudeIndex = index
+                    "longitude" -> longitudeIndex = index
+                    "pm2.5_10minute" -> pm25Index = index
+                }
+            }
+
+            return SensorsResult(data.mapNotNull {
+                try {
+                    Sensor(
+                        ID = it[sensor_indexIndex].asInt,
+                        name = it[nameIndex].asString,
+                        location_type = location_types[it[location_typeIndex].asInt],
+                        latitude = it[latitudeIndex].asDouble,
+                        longitude = it[longitudeIndex].asDouble,
+                        stats = null,
+                        lastSeenSeconds = null,
+                        pm25Override = it[pm25Index].asDouble
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to parse sensor $it", e)
+                    null
+                }
+            })
+        } catch (e: Exception) {
+            throw JsonParseException(e)
+        }
+    }
+}
+
 
 open class PurpleAir(context: Context) {
-
     val client = CachingClient(context)
+
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(SensorsResult::class.java, SensorResultDeserializer())
+        .create()
 
     private val retrofit = Retrofit.Builder()
             .baseUrl(PURPLE_AIR_BASE_URL)
             .client(client.createClient())
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
     private val service: PurpleAirService = retrofit.create(PurpleAirService::class.java)
 
     val allSensorsDownloader = AllSensorsDownloader(context)
 
-    open fun getAllSensors(): Single<List<Sensor>> {
-          // Using retrofit is much too slow.
-//        return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
-////            service.allSensors()!!.enqueue(object : Callback<SensorResult?> {
-////
-////                override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
-////                    if (response.isSuccessful && response.body() != null) {
-////                        emitter.onSuccess(response.body()!!.results)
-////                    } else {
-////                        emitter.onError(Exception("Error ${response.code()}: ${response.message()}. ${response.errorBody()?.string()}"))
-////                    }
-////                }
-////
-////                override fun onFailure(call: Call<SensorResult?>, t: Throwable) {
-////                    emitter.onError(t)
-////                }
-////            })
-//
-//
-//
-//        }
-        return allSensorsDownloader.getAllSensors()
+    open fun getAllSensors(location: Location): Single<List<Sensor>> {
+        return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
+            service.allSensors(
+                fields = REQUIRED_FIELDS,
+                northwestLat = location.latitude + 1,
+                northwestLon = location.longitude - 1,
+                southeastLat = location.latitude - 1,
+                southeastLon = location.longitude + 1,
+                )!!.enqueue(object : Callback<SensorsResult?> {
+
+                override fun onResponse(call: Call<SensorsResult?>, response: Response<SensorsResult?>) {
+                    Log.d(TAG, "getAllSensors ${call.request().url()}");
+                    if (response.isSuccessful && response.body() != null) {
+                        emitter.onSuccess(response.body()!!.sensors)
+                    } else {
+                        emitter.onError(Exception("Error ${response.code()}: ${response.message()}. ${response.errorBody()?.string()}"))
+                    }
+                }
+
+                override fun onFailure(call: Call<SensorsResult?>, t: Throwable) {
+                    Log.e(TAG, "getAllSensors onFailure", t)
+                    emitter.onError(t)
+                }
+            })
+        }
+        // Don't need the allSensorsDownloader, with the new API. Leaving it here so you know the pain I went through.
+//        return allSensorsDownloader.getAllSensors()
             .observeOn(Schedulers.computation())
             .flatMap { results ->
                 Single.create { emitter: SingleEmitter<List<Sensor>> ->
@@ -108,7 +209,7 @@ open class PurpleAir(context: Context) {
                     var invalidCount = 0
                     results.forEach { d ->
                         //Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
-                        if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
+                        if (d != null && d.name != null && d.latitude != null && d.longitude != null) {
                             valids.add(d)
                         } else {
                             invalidCount++
@@ -127,30 +228,30 @@ open class PurpleAir(context: Context) {
 
     fun loadSensor(sensorId: Int): Single<Sensor> {
         return Single.create { emitter: SingleEmitter<Sensor> ->
-            service.sensor(sensorId)!!.enqueue(object : Callback<SensorResult?> {
+            service.sensor(sensorId, REQUIRED_FIELDS)!!.enqueue(object : Callback<SingleSensorResult?> {
 
-                override fun onResponse(call: Call<SensorResult?>, response: Response<SensorResult?>) {
+                override fun onResponse(call: Call<SingleSensorResult?>, response: Response<SingleSensorResult?>) {
                     if (response.isSuccessful && response.body() != null) {
-                        response.body()!!.results.forEach { d ->
-                            Log.v(TAG, "Got sensor $d : ${d?.PM2_5Value} : ${d?.Stats}")
-                            if (d != null && d.Stats != null && d.PM2_5Value != null && d.Lat != null && d.Lon != null) {
-                                emitter.onSuccess(d)
-                                return@forEach
-                            }
+                        val d = response.body()!!.sensor
+                        Log.v(TAG, "Got sensor $d : ${d?.stats} : ${d?.name}")
+                        if (d != null &&  d.stats != null && d.latitude != null && d.longitude != null) {
+                            emitter.onSuccess(d)
+                        } else {
+                            emitter.onError(Exception("Error: failed parsing sensor"))
                         }
                     } else {
                         emitter.onError(Exception("Error ${response.code()}: ${response.message()}. ${response.errorBody()?.string()}"))
                     }
                 }
 
-                override fun onFailure(call: Call<SensorResult?>, t: Throwable) {
+                override fun onFailure(call: Call<SingleSensorResult?>, t: Throwable) {
+                    Log.e(TAG, "loadSensor onFailure ${call.request().url()}", t)
                     emitter.onError(t)
                 }
             })
         }
     }
 }
-
 
 class DownloadReceiver(private val downloadId: Long): BroadcastReceiver() {
 
@@ -206,7 +307,7 @@ class AllSensorsDownloader(private val context: Context) {
         Log.d(TAG, "loadFile()")
         return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
                 emitter.onSuccess(FileReader(file).use {
-                    GsonBuilder().create().fromJson(it, SensorResult::class.java) }.results)
+                    GsonBuilder().create().fromJson(it, SensorsResult::class.java) }.sensors)
             }
             .subscribeOn(Schedulers.io())
     }

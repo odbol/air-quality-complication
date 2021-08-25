@@ -1,6 +1,7 @@
 package com.odbol.wear.airquality.purpleair
 
 import android.content.Context
+import com.odbol.wear.airquality.R
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -9,19 +10,25 @@ import java.util.concurrent.TimeUnit
  * Caches calls to the giant list of sensors, but uses fresh data for individual sensor retrieval.
  */
 class CachingClient(private val context: Context) {
+    private val readKey = context.getString(R.string.purpleair_api_key_read)
+
     fun createClient(): OkHttpClient {
         return OkHttpClient.Builder()
                 .connectTimeout(2, TimeUnit.MINUTES)
                 .readTimeout(2, TimeUnit.MINUTES)
                 .writeTimeout(2, TimeUnit.MINUTES)
                 .cache(Cache(context.cacheDir, 10 * 1024 * 1024))
+                .addInterceptor { chain ->
+                        chain.proceed(chain.request().newBuilder().header("X-API-Key", readKey).build())
+                }
                 // Add an Interceptor to the OkHttpClient.
                 .addInterceptor { chain ->
 
                     // Get the request from the chain.
                     var request = chain.request()
 
-                    var isIndividualSensorRequest = request.url().queryParameterValues("show").isNotEmpty()
+                    val pathSegments = request.url().encodedPathSegments()
+                    var isIndividualSensorRequest = !(pathSegments.size > 1 && pathSegments[pathSegments.size - 1] == "sensors")
 
 
                     /*
@@ -32,11 +39,11 @@ class CachingClient(private val context: Context) {
                     request = if (isIndividualSensorRequest)
                     /*
                 *  If there is Internet, get the cache that was stored 5 seconds ago.
-                *  If the cache is older than 5 seconds, then discard it,
+                *  If the cache is older than 60 seconds, then discard it,
                 *  and indicate an error in fetching the response.
                 *  The 'max-age' attribute is responsible for this behavior.
                 */
-                        request.newBuilder().header("Cache-Control", "public, max-age=" + 5).build()
+                        request.newBuilder().header("Cache-Control", "public, max-age=" + 60).build()
                     else
                     /*
                 *  If there is no Internet, get the cache that was stored 7 days ago.
