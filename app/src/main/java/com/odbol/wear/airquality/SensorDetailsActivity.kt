@@ -34,8 +34,6 @@ class SensorDetailsActivity: Activity() {
 
         if (sensorStore.selectedSensorId < 0) {
             startSensorPickerActivity()
-        } else {
-            loadSensor(sensorStore.selectedSensorId)
         }
     }
 
@@ -45,10 +43,16 @@ class SensorDetailsActivity: Activity() {
 
     override fun onResume() {
         super.onResume()
+
+        if (sensorStore.selectedSensorId >= 0) {
+            loadSensor(sensorStore.selectedSensorId)
+        }
     }
 
     private fun loadSensor(sensorId: Int) {
         if (sensorId < 0) return
+
+        subscriptions.clear()
 
         ui.isLoading = true
         subscriptions.add(
