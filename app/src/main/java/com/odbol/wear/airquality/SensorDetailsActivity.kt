@@ -52,16 +52,25 @@ class SensorDetailsActivity: Activity() {
 
         ui.isLoading = true
         subscriptions.add(
-                purpleAir.loadSensor(sensorId)
+                purpleAir.loadSensorCached(sensorId)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe({
-                            ui.bind(it)
-                            ui.isLoading = false
-                        }, {
-                            Log.e(TAG, "Error retreiving sensor", it)
-                            ui.onError(it)
-                        })
+                        .subscribe(
+                            // onNext
+                            {
+                                Log.d(TAG, "Got sensor")
+                                ui.bind(it)
+                            },
+                            // onError
+                            {
+                                Log.e(TAG, "Error retreiving sensor", it)
+                                ui.onError(it)
+                            },
+                            // onComplete
+                            {
+                                Log.d(TAG, "Completed getting sensors")
+                                ui.isLoading = false
+                            })
         )
     }
 

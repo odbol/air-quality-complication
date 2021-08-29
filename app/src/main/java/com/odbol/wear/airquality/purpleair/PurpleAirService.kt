@@ -3,12 +3,14 @@ package com.odbol.wear.airquality.purpleair
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
 import android.util.Log
 import com.google.gson.*
 import com.odbol.wear.airquality.R
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
 import io.reactivex.schedulers.Schedulers
@@ -172,7 +174,9 @@ class SensorResultDeserializer: JsonDeserializer<SensorsResult> {
 
 
 open class PurpleAir(context: Context) {
-    val client = CachingClient(context)
+    private val client = CachingClient(context)
+
+    private val prefs = context.getSharedPreferences("SENSOR_CACHE", MODE_PRIVATE)
 
     private val gson = GsonBuilder()
         .registerTypeAdapter(SensorsResult::class.java, SensorResultDeserializer())
@@ -265,7 +269,37 @@ open class PurpleAir(context: Context) {
                 }
             })
         }
+        .doOnSuccess {
+            prefs.edit()
+                .putString(getPrefsKeyForCachedSensor(sensorId), gson.toJson(it))
+                .apply()
+        }
     }
+
+    fun loadSensorCached(sensorId: Int): Observable<Sensor> {
+        return Observable.create<Sensor> { emitter ->
+            val json = prefs.getString(getPrefsKeyForCachedSensor(sensorId), null)
+            if (!json.isNullOrBlank()) {
+                try {
+                    val sensor = gson.fromJson(json, Sensor::class.java)
+                    emitter.onNext(sensor)
+                } catch (e: JsonSyntaxException) {
+                    Log.w(TAG, "Failed to parse cached sensor JSON", e)
+                    // Must have been an old format. Remove it
+                    prefs.edit()
+                        .remove(getPrefsKeyForCachedSensor(sensorId))
+                        .apply()
+                }
+            }
+
+            emitter.onComplete()
+        }
+        // Technically, there is a chance that the network operation could complete first, and then
+        // be overwritten by the cached value. That seems impossible in practice though.
+        .mergeWith(loadSensor(sensorId))
+    }
+
+    private fun getPrefsKeyForCachedSensor(sensorId: Int) = "PREF_SENSOR_CACHE_$sensorId"
 }
 
 class DownloadReceiver(private val downloadId: Long): BroadcastReceiver() {
