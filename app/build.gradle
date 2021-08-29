@@ -7,8 +7,8 @@ android {
         applicationId "com.odbol.wear.airquality"
         minSdkVersion 25
         targetSdkVersion 29
-        versionCode 120
-        versionName "1.2"
+        versionCode 130
+        versionName "1.3"
     }
     buildTypes {
         release {
