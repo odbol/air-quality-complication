@@ -35,8 +35,8 @@ dependencies {
     compileOnly 'com.google.android.wearable:wearable:2.7.0'
 
     // RxLocation
-    compile 'com.google.android.gms:play-services-location:17.0.0'
-    compile 'com.patloew.rxlocation:rxlocation:1.0.5'
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
+    implementation 'com.patloew.rxlocation:rxlocation:1.0.5'
 
     implementation 'com.github.tbruyelle:rxpermissions:0.10.2'
 
