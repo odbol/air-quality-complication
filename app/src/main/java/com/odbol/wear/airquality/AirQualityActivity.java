@@ -53,6 +53,7 @@ import io.reactivex.schedulers.Schedulers;
 import static com.odbol.wear.airquality.SensorDetailsActivityKt.EXTRA_SENSOR_ID;
 import static com.odbol.wear.airquality.purpleair.PurpleAirServiceKt.sortByClosest;
 
+/** Shows a list of sensors nearby to choose from */
 public class AirQualityActivity extends FragmentActivity implements AmbientModeSupport.AmbientCallbackProvider {
 
     private static final String TAG = "AirQualityActivity";
