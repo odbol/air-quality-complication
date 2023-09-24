@@ -14,6 +14,8 @@
 
 package com.odbol.wear.airquality.complication;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
+
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -178,7 +180,8 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
     private PendingIntent getTapAction() {
         Intent intent = new Intent(this, SensorDetailsActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE);
     }
 
     private ComplicationText getFullDescription(Sensor sensor) {
