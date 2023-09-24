@@ -22,11 +22,11 @@ import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.location.Address;
 import android.support.wearable.complications.ComplicationData;
-import android.support.wearable.complications.ComplicationManager;
-import android.support.wearable.complications.ComplicationProviderService;
 import android.support.wearable.complications.ComplicationText;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.wear.complications.ComplicationProviderService;
 
 import com.odbol.wear.airquality.AqiUtils;
 import com.odbol.wear.airquality.R;

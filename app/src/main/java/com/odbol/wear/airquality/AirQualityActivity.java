@@ -26,8 +26,8 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.wear.ambient.AmbientModeSupport;
-import android.support.wearable.complications.ProviderUpdateRequester;
-import android.text.format.DateUtils;
+import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -205,7 +205,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
 
     private void forceComplicationUpdate() {
         if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            new ProviderUpdateRequester(this, new ComponentName(this, AirQualityComplicationProviderService.class))
+            ComplicationDataSourceUpdateRequester.create(this, new ComponentName(this, AirQualityComplicationProviderService.class))
                     .requestUpdateAll();
         }
     }
