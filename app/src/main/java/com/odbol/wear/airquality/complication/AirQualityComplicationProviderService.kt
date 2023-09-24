@@ -13,7 +13,6 @@
 // limitations under the License.
 package com.odbol.wear.airquality.complication
 
-import ComplicationText.TimeDifferenceBuilder
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -24,6 +23,10 @@ import android.util.Log
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationText
 import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.LongTextComplicationData
+import androidx.wear.watchface.complications.data.MonochromaticImage
+import androidx.wear.watchface.complications.data.PlainComplicationText
+import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceService
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import com.odbol.wear.airquality.AqiUtils
@@ -55,7 +58,13 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
         super.onDestroy()
     }
 
-    fun onComplicationUpdate(complicationId: Int, dataType: Int, manager: ComplicationManager) {
+
+    override fun onComplicationRequest(
+        complicationRequest: ComplicationRequest,
+        complicationRequestListener: ComplicationRequestListener
+    ) {
+        val complicationId = complicationRequest.complicationInstanceId
+        val dataType = complicationRequest.complicationType
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "onComplicationUpdate() id: $complicationId")
         }
@@ -83,74 +92,84 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
                         updateComplication(
                             complicationId,
                             dataType,
-                            manager,
-                            sensor
+                            sensor,
+                            complicationRequestListener
                         )
                     }
                 )  // onError
                 { error: Throwable? ->
                     Log.e(TAG, "Error retreiving location", error)
-                    updateComplication(complicationId, dataType, manager, null)
+                    updateComplication(
+                        complicationId,
+                        dataType,
+                        null,
+                        complicationRequestListener
+                    )
                 }
         )
     }
 
     private fun updateComplication(
         complicationId: Int,
-        dataType: Int,
-        manager: ComplicationManager,
-        sensor: Sensor?
+        dataType: ComplicationType,
+        sensor: Sensor?,
+        complicationRequestListener: ComplicationRequestListener
     ) {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "sensor: $sensor")
         }
         var complicationData: ComplicationData? = null
         when (dataType) {
-            TYPE_SHORT_TEXT -> complicationData = Builder(TYPE_SHORT_TEXT)
-                .setShortTitle(plainText("AQI"))
-                .setShortText(getAqi(sensor))
-                .setContentDescription(getFullDescription(sensor))
-                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
+
+            ComplicationType.SHORT_TEXT -> complicationData = ShortTextComplicationData.Builder(
+                    getAqi(sensor),
+                    getFullDescription(sensor)
+                )
+                .setTitle(plainText("AQI"))
+                .setMonochromaticImage(
+                    MonochromaticImage.Builder(
+                        Icon.createWithResource(this, R.drawable.ic_air_quality)).build()
+                )
                 .setTapAction(tapAction)
                 .build()
 
-            TYPE_LONG_TEXT -> complicationData = Builder(TYPE_LONG_TEXT)
-                .setLongTitle(getTimeAgo(sensor))
-                .setLongText(getAqi(sensor))
-                .setContentDescription(getFullDescription(sensor))
-                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
+            ComplicationType.LONG_TEXT -> complicationData = LongTextComplicationData.Builder(
+                    getAqi(sensor),
+                    getFullDescription(sensor)
+                )
+                .setTitle(plainText("AQI"))
+                .setMonochromaticImage(
+                    MonochromaticImage.Builder(
+                        Icon.createWithResource(this, R.drawable.ic_air_quality)).build()
+                )
                 .setTapAction(tapAction)
                 .build()
 
-            TYPE_RANGED_VALUE -> complicationData = Builder(TYPE_RANGED_VALUE)
-                .setShortTitle(getTimeAgo(sensor))
-                .setShortText(getAqi(sensor))
-                .setMinValue(0)
-                .setMaxValue(500)
-                .setValue(min(500.0, getAqiValue(sensor).toDouble()))
-                .setContentDescription(getFullDescription(sensor))
-                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
-                .setTapAction(tapAction)
-                .build()
+//            ComplicationType.RANGED_VALUE -> complicationData = Builder(RANGED_VALUE)
+//                .setShortTitle(getTimeAgo(sensor))
+//                .setShortText(getAqi(sensor))
+//                .setMinValue(0)
+//                .setMaxValue(500)
+//                .setValue(min(500.0, getAqiValue(sensor).toDouble()))
+//                .setContentDescription(getFullDescription(sensor))
+//                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
+//                .setTapAction(tapAction)
+//                .build()
 
             else -> //                if (Log.isLoggable(TAG, Log.WARN)) {
                 Log.w(TAG, "Unexpected complication type $dataType")
         }
         if (complicationData != null) {
-            manager.updateComplicationData(complicationId, complicationData)
+            complicationRequestListener.onComplicationData(complicationData)
         } else {
             // If no data is sent, we still need to inform the ComplicationManager, so
             // the update job can finish and the wake lock isn't held any longer.
-            manager.noUpdateRequired(complicationId)
+            complicationRequestListener.onComplicationData(null)
         }
     }
 
     private fun getAqiValue(sensor: Sensor?): Int {
         return if (sensor == null) 0 else AqiUtils.convertPm25ToAqi(sensor.pm25).aqi
-    }
-
-    private fun getTimeAgo(sensor: Sensor?): ComplicationText {
-        return if (sensor == null) plainText("--") else getTimeAgo(sensor.lastSeenSeconds).build()
     }
 
     private fun getAqi(sensor: Sensor?): ComplicationText {
@@ -168,28 +187,21 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
         }
 
     private fun getFullDescription(sensor: Sensor?): ComplicationText {
-        return if (sensor == null) plainText(getString(R.string.no_location)) else getTimeAgo(sensor.lastSeenSeconds)
-            .setSurroundingText(getString(R.string.aqi_as_of_time_ago, getAqiValue(sensor), "^1"))
-            .build()
+        return if (sensor == null) plainText(getString(R.string.no_location)) else plainText("AQI")
     }
-
-    private fun getTimeAgo(fromTime: Long?): TimeDifferenceBuilder {
-        return TimeDifferenceBuilder()
-            .setStyle(DIFFERENCE_STYLE_SHORT_SINGLE_UNIT)
-            .setMinimumUnit(TimeUnit.MINUTES)
-            .setReferencePeriodEnd(fromTime ?: 0)
-            .setShowNowText(true)
-    }
+//
+//    private fun getTimeAgo(fromTime: Long?): TimeDifferenceBuilder {
+//        return TimeDifferenceBuilder()
+//            .setStyle(DIFFERENCE_STYLE_SHORT_SINGLE_UNIT)
+//            .setMinimumUnit(TimeUnit.MINUTES)
+//            .setReferencePeriodEnd(fromTime ?: 0)
+//            .setShowNowText(true)
+//    }
 
     override fun getPreviewData(complicationType: ComplicationType): ComplicationData? {
         return null
     }
 
-    override fun onComplicationRequest(
-        complicationRequest: ComplicationRequest,
-        complicationRequestListener: ComplicationRequestListener
-    ) {
-    }
 
     companion object {
         private const val TAG = "AirQualityComplication"
@@ -205,3 +217,5 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
         }
     }
 }
+
+fun plainText(text: CharSequence) = PlainComplicationText.Builder(text).build()
