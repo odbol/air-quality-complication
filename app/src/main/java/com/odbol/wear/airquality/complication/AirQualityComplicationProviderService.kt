@@ -38,8 +38,6 @@ import com.odbol.wear.airquality.purpleair.Sensor
 import com.patloew.rxlocation.RxLocation
 import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
-import java.util.concurrent.TimeUnit
-import kotlin.math.min
 
 class AirQualityComplicationProviderService : ComplicationDataSourceService() {
     private var rxLocation: RxLocation? = null
@@ -118,47 +116,7 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "sensor: $sensor")
         }
-        var complicationData: ComplicationData? = null
-        when (dataType) {
-
-            ComplicationType.SHORT_TEXT -> complicationData = ShortTextComplicationData.Builder(
-                    getAqi(sensor),
-                    getFullDescription(sensor)
-                )
-                .setTitle(plainText("AQI"))
-                .setMonochromaticImage(
-                    MonochromaticImage.Builder(
-                        Icon.createWithResource(this, R.drawable.ic_air_quality)).build()
-                )
-                .setTapAction(tapAction)
-                .build()
-
-            ComplicationType.LONG_TEXT -> complicationData = LongTextComplicationData.Builder(
-                    getAqi(sensor),
-                    getFullDescription(sensor)
-                )
-                .setTitle(plainText("AQI"))
-                .setMonochromaticImage(
-                    MonochromaticImage.Builder(
-                        Icon.createWithResource(this, R.drawable.ic_air_quality)).build()
-                )
-                .setTapAction(tapAction)
-                .build()
-
-//            ComplicationType.RANGED_VALUE -> complicationData = Builder(RANGED_VALUE)
-//                .setShortTitle(getTimeAgo(sensor))
-//                .setShortText(getAqi(sensor))
-//                .setMinValue(0)
-//                .setMaxValue(500)
-//                .setValue(min(500.0, getAqiValue(sensor).toDouble()))
-//                .setContentDescription(getFullDescription(sensor))
-//                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
-//                .setTapAction(tapAction)
-//                .build()
-
-            else -> //                if (Log.isLoggable(TAG, Log.WARN)) {
-                Log.w(TAG, "Unexpected complication type $dataType")
-        }
+        val complicationData: ComplicationData? = generateComplicationData(dataType, sensor)
         if (complicationData != null) {
             complicationRequestListener.onComplicationData(complicationData)
         } else {
@@ -166,6 +124,56 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
             // the update job can finish and the wake lock isn't held any longer.
             complicationRequestListener.onComplicationData(null)
         }
+    }
+
+    private fun generateComplicationData(
+        dataType: ComplicationType,
+        sensor: Sensor?
+    ): ComplicationData? {
+        var complicationData: ComplicationData? = null
+        when (dataType) {
+
+            ComplicationType.SHORT_TEXT -> complicationData = ShortTextComplicationData.Builder(
+                getAqi(sensor),
+                getFullDescription(sensor)
+            )
+                .setTitle(plainText("AQI"))
+                .setMonochromaticImage(
+                    MonochromaticImage.Builder(
+                        Icon.createWithResource(this, R.drawable.ic_air_quality)
+                    ).build()
+                )
+                .setTapAction(tapAction)
+                .build()
+
+            ComplicationType.LONG_TEXT -> complicationData = LongTextComplicationData.Builder(
+                getAqi(sensor),
+                getFullDescription(sensor)
+            )
+                .setTitle(plainText("AQI"))
+                .setMonochromaticImage(
+                    MonochromaticImage.Builder(
+                        Icon.createWithResource(this, R.drawable.ic_air_quality)
+                    ).build()
+                )
+                .setTapAction(tapAction)
+                .build()
+
+    //            ComplicationType.RANGED_VALUE -> complicationData = Builder(RANGED_VALUE)
+    //                .setShortTitle(getTimeAgo(sensor))
+    //                .setShortText(getAqi(sensor))
+    //                .setMinValue(0)
+    //                .setMaxValue(500)
+    //                .setValue(min(500.0, getAqiValue(sensor).toDouble()))
+    //                .setContentDescription(getFullDescription(sensor))
+    //                .setIcon(Icon.createWithResource(this, R.drawable.ic_air_quality))
+    //                .setTapAction(tapAction)
+    //                .build()
+
+            else -> //                if (Log.isLoggable(TAG, Log.WARN)) {
+                Log.w(TAG, "Unexpected complication type $dataType")
+        }
+        return complicationData
     }
 
     private fun getAqiValue(sensor: Sensor?): Int {
@@ -198,8 +206,8 @@ class AirQualityComplicationProviderService : ComplicationDataSourceService() {
 //            .setShowNowText(true)
 //    }
 
-    override fun getPreviewData(complicationType: ComplicationType): ComplicationData? {
-        return null
+    override fun getPreviewData(type: ComplicationType): ComplicationData? {
+        return generateComplicationData(type, null)
     }
 
 
