@@ -21,12 +21,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Icon;
 import android.location.Address;
-import android.support.wearable.complications.ComplicationData;
-import android.support.wearable.complications.ComplicationText;
 import android.text.TextUtils;
 import android.util.Log;
 
-import androidx.wear.complications.ComplicationProviderService;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.wear.watchface.complications.data.ComplicationData;
+import androidx.wear.watchface.complications.data.ComplicationText;
+import androidx.wear.watchface.complications.data.ComplicationType;
+import androidx.wear.watchface.complications.datasource.ComplicationDataSourceService;
+import androidx.wear.watchface.complications.datasource.ComplicationRequest;
 
 import com.odbol.wear.airquality.AqiUtils;
 import com.odbol.wear.airquality.R;
@@ -43,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 
-public class AirQualityComplicationProviderService extends ComplicationProviderService {
+public class AirQualityComplicationProviderService extends ComplicationDataSourceService {
 
     private static final String TAG = "AirQualityComplication";
 
@@ -210,5 +215,16 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                 .setMinimumUnit(TimeUnit.MINUTES)
                 .setReferencePeriodEnd(fromTime == null ? 0 : fromTime)
                 .setShowNowText(true);
+    }
+
+    @Nullable
+    @Override
+    public ComplicationData getPreviewData(@NonNull ComplicationType complicationType) {
+        return null;
+    }
+
+    @Override
+    public void onComplicationRequest(@NonNull ComplicationRequest complicationRequest, @NonNull ComplicationRequestListener complicationRequestListener) {
+
     }
 }
