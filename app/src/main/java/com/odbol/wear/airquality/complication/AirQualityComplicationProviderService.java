@@ -147,9 +147,9 @@ public class AirQualityComplicationProviderService extends ComplicationProviderS
                                 .build();
                 break;
             default:
-                if (Log.isLoggable(TAG, Log.WARN)) {
+//                if (Log.isLoggable(TAG, Log.WARN)) {
                     Log.w(TAG, "Unexpected complication type " + dataType);
-                }
+//                }
         }
 
         if (complicationData != null) {
