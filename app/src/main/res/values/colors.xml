@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="chip">#9533A2DD</color>
+    <color name="white">#ffffffff</color>
+    <color name="black">#000000</color>
     <color name="text_faint">#999999</color>
     <color name="primary">#03A9F4</color>
 
