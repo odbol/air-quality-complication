@@ -211,10 +211,12 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
     }
 
     private Observable<Boolean> checkPermissions() {
-        return new RxPermissions(this)
+        RxPermissions rxPermissions = new RxPermissions(this);
+        return rxPermissions
                 .request(Manifest.permission.ACCESS_FINE_LOCATION)
                 .map(isGranted -> {
-                    if (isGranted) return true;
+                    if (isGranted || rxPermissions.isGranted(Manifest.permission.ACCESS_COARSE_LOCATION)) return true;
+
                     throw new SecurityException("No location permission");
                 });
     }
