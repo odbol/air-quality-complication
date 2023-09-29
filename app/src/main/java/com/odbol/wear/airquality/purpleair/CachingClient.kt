@@ -12,12 +12,14 @@ import java.util.concurrent.TimeUnit
 class CachingClient(private val context: Context) {
     private val readKey = context.getString(R.string.purpleair_api_key_read)
 
+    val cache by lazy { Cache(context.cacheDir, 10 * 1024 * 1024)}
+
     fun createClient(): OkHttpClient {
         return OkHttpClient.Builder()
                 .connectTimeout(2, TimeUnit.MINUTES)
                 .readTimeout(2, TimeUnit.MINUTES)
                 .writeTimeout(2, TimeUnit.MINUTES)
-                .cache(Cache(context.cacheDir, 10 * 1024 * 1024))
+                .cache(cache)
                 .addInterceptor { chain ->
                         chain.proceed(chain.request().newBuilder().header("X-API-Key", readKey).build())
                 }
@@ -60,4 +62,5 @@ class CachingClient(private val context: Context) {
                 }
                 .build()
     }
+
 }

@@ -215,6 +215,51 @@ open class PurpleAir(context: Context) {
 
                 override fun onFailure(call: Call<SensorsResult?>, t: Throwable) {
                     Log.e(TAG, "getAllSensors onFailure", t)
+
+                    // Weird bug in OkHttp caching layer:
+                    /*
+java.io.IOException: canceled due to java.lang.ArrayIndexOutOfBoundsException: length=8192; index=-18
+    at okhttp3.RealCall$AsyncCall.execute(RealCall.java:185)
+    at okhttp3.internal.NamedRunnable.run(NamedRunnable.java:32)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
+    at java.lang.Thread.run(Thread.java:1012)
+    Suppressed: java.lang.ArrayIndexOutOfBoundsException: length=8192; index=-18
+        at okio.Buffer.indexOf(Buffer.java:1466)
+        at okio.RealBufferedSource.indexOf(RealBufferedSource.java:352)
+        at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.java:230)
+        at okio.RealBufferedSource.readUtf8LineStrict(RealBufferedSource.java:224)
+        at okhttp3.internal.cache.DiskLruCache.readJournal(DiskLruCache.java:294)
+        at okhttp3.internal.cache.DiskLruCache.initialize(DiskLruCache.java:228)
+        at okhttp3.internal.cache.DiskLruCache.get(DiskLruCache.java:430)
+        at okhttp3.Cache.get(Cache.java:198)
+        at okhttp3.Cache$1.get(Cache.java:145)
+        at okhttp3.internal.cache.CacheInterceptor.intercept(CacheInterceptor.java:55)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:142)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:117)
+        at okhttp3.internal.http.BridgeInterceptor.intercept(BridgeInterceptor.java:93)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:142)
+        at okhttp3.internal.http.RetryAndFollowUpInterceptor.intercept(RetryAndFollowUpInterceptor.java:88)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:142)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:117)
+        at com.odbol.wear.airquality.purpleair.CachingClient.createClient$lambda-1(CachingClient.kt:59)
+        at com.odbol.wear.airquality.purpleair.CachingClient.$r8$lambda$VQQ1wmatxEhiFJ-Thn04T4KTcmM(Unknown Source:0)
+        at com.odbol.wear.airquality.purpleair.CachingClient$$ExternalSyntheticLambda1.intercept(Unknown Source:0)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:142)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:117)
+        at com.odbol.wear.airquality.purpleair.CachingClient.createClient$lambda-0(CachingClient.kt:22)
+        at com.odbol.wear.airquality.purpleair.CachingClient.$r8$lambda$mtt9YgbDW4Jd78tHI6a7EfrQa50(Unknown Source:0)
+        at com.odbol.wear.airquality.purpleair.CachingClient$$ExternalSyntheticLambda0.intercept(Unknown Source:2)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:142)
+        at okhttp3.internal.http.RealInterceptorChain.proceed(RealInterceptorChain.java:117)
+        at okhttp3.RealCall.getResponseWithInterceptorChain(RealCall.java:229)
+        at okhttp3.RealCall$AsyncCall.execute(RealCall.java:172)
+                     */
+                    if (t.suppressedExceptions.any { it is ArrayIndexOutOfBoundsException }) {
+                        Log.w(TAG, "Cache error, evicting", t)
+                        client.cache.delete()
+                    }
+
                     emitter.onError(t)
                 }
             })
