@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     defaultConfig {
         applicationId "com.odbol.wear.airquality"
         minSdkVersion 26
@@ -39,6 +39,7 @@ dependencies {
     implementation "androidx.wear.watchface:watchface-complications-data-source:1.1.1"
 //    implementation "androidx.wear.watchface:watchface-complications-data-source-ktx:1.1.1"
 //    implementation 'androidx.wear:wear-complications-provider:1.0.0-alpha17'
+    implementation("androidx.core:core-splashscreen:1.1.0-alpha02")
 
     // RxLocation
     implementation 'com.google.android.gms:play-services-location:21.0.1'

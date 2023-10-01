@@ -22,6 +22,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Vibrator;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -92,6 +93,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SplashScreen.Companion.installSplashScreen(this);
         setContentView(R.layout.where_am_i_activity);
 
         ambientController = AmbientModeSupport.attach(this);
