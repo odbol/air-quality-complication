@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.wear.ambient.AmbientModeSupport;
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester;
+import androidx.wear.widget.WearableRecyclerView;
 
 import android.util.Log;
 import android.view.View;
@@ -70,7 +71,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
     private View loadingView;
     private TextView textView;
     private TextView hintView;
-    private RecyclerView listView;
+    private WearableRecyclerView listView;
     private ProgressBar progressBar;
 
     private RxLocation rxLocation;
@@ -102,7 +103,8 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
         hintView = (TextView) findViewById(R.id.hint);
         progressBar = (ProgressBar) findViewById(R.id.progress);
         loadingView = (View) findViewById(R.id.loading);
-        listView = (RecyclerView) findViewById(R.id.list);
+        listView = findViewById(R.id.list);
+
 
         listView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         listView.setAdapter(adapter);
@@ -151,6 +153,7 @@ public class AirQualityActivity extends FragmentActivity implements AmbientModeS
                         (sensors) -> {
                             loadingView.setVisibility(View.GONE);
                             listView.setVisibility(View.VISIBLE);
+                            listView.requestFocus();
 
                             adapter.setSensors(sensors);
 
