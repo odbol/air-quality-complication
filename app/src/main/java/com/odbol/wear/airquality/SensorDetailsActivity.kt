@@ -1,10 +1,15 @@
 package com.odbol.wear.airquality
 
+import android.Manifest
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
+import com.odbol.wear.airquality.complication.AirQualityComplicationProviderService
 import com.odbol.wear.airquality.purpleair.PurpleAir
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -66,6 +71,7 @@ class SensorDetailsActivity: Activity() {
                             {
                                 Log.d(TAG, "Got sensor")
                                 ui.bind(it)
+                                forceComplicationUpdate()
                             },
                             // onError
                             {
@@ -78,6 +84,18 @@ class SensorDetailsActivity: Activity() {
                                 ui.isLoading = false
                             })
         )
+    }
+
+    private fun forceComplicationUpdate() {
+        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            ComplicationDataSourceUpdateRequester.create(
+                this, ComponentName(
+                    this,
+                    AirQualityComplicationProviderService::class.java
+                )
+            )
+                .requestUpdateAll()
+        }
     }
 
     override fun onDestroy() {
