@@ -12,4 +12,5 @@
     <color name="Red">#F44336</color>
     <color name="Purple">#9C27B0</color>
     <color name="Maroon">#AF0404</color>
+    <color name="scrim_bg">#3C000000</color>
 </resources>

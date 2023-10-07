@@ -11,4 +11,11 @@
         <!-- Set the theme of the Activity that follows your splash screen. -->
         <item name="postSplashScreenTheme">@style/Theme.App</item>
     </style>
+
+    <style name="dropShadowText">
+        <item name="android:shadowColor">@color/scrim_bg</item>
+        <item name="android:shadowRadius">5</item>
+        <item name="android:shadowDy">6</item>
+        <item name="android:shadowDx">7</item>
+    </style>
 </resources>
