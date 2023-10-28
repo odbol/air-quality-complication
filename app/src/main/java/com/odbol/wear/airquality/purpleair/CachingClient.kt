@@ -12,7 +12,15 @@ import java.util.concurrent.TimeUnit
 class CachingClient(private val context: Context) {
     private val readKey = context.getString(R.string.purpleair_api_key_read)
 
-    val cache by lazy { Cache(context.cacheDir, 10 * 1024 * 1024)}
+    val cache: Cache
+        get() {
+            synchronized(lock) {
+                if (sharedCache == null) {
+                    sharedCache = Cache(context.cacheDir, 10 * 1024 * 1024)
+                }
+                return sharedCache!!
+            }
+        }
 
     fun createClient(): OkHttpClient {
         return OkHttpClient.Builder()
@@ -63,4 +71,8 @@ class CachingClient(private val context: Context) {
                 .build()
     }
 
+    companion object {
+        private val lock = Any()
+        private var sharedCache: Cache? = null
+    }
 }
