@@ -310,6 +310,11 @@ java.io.IOException: canceled due to java.lang.ArrayIndexOutOfBoundsException: l
 
                 override fun onFailure(call: Call<SingleSensorResult?>, t: Throwable) {
                     Log.e(TAG, "loadSensor onFailure ${call.request().url()}", t)
+
+                    if (t.suppressedExceptions.any { it is ArrayIndexOutOfBoundsException }) {
+                        Log.w(TAG, "Cache error, evicting", t)
+                        client.cache?.delete()
+                    }
                     emitter.onError(t)
                 }
             })
