@@ -196,15 +196,18 @@ open class PurpleAir(context: Context) {
         return Single.create { emitter: SingleEmitter<List<Sensor?>> ->
             Log.d(TAG, "getAllSensors $location");
 
-            service.allSensors(
+            val sensorCall = service.allSensors(
                 fields = REQUIRED_FIELDS,
                 northwestLat = location.latitude + 1,
                 northwestLon = location.longitude - 1,
                 southeastLat = location.latitude - 1,
                 southeastLon = location.longitude + 1,
-                )!!.enqueue(object : Callback<SensorsResult?> {
+                )!!
+
+            sensorCall.enqueue(object : Callback<SensorsResult?> {
                 override fun onResponse(call: Call<SensorsResult?>, response: Response<SensorsResult?>) {
                     Log.d(TAG, "getAllSensors ${call.request().url()}");
+                    if (emitter.isDisposed) return
                     if (response.isSuccessful && response.body() != null) {
                         emitter.onSuccess(response.body()!!.sensors)
                     } else {
@@ -257,12 +260,18 @@ java.io.IOException: canceled due to java.lang.ArrayIndexOutOfBoundsException: l
                      */
                     if (t.suppressedExceptions.any { it is ArrayIndexOutOfBoundsException }) {
                         Log.w(TAG, "Cache error, evicting", t)
-                        client.cache.delete()
+                        client.cache?.delete()
                     }
 
+                    if (emitter.isDisposed) return
                     emitter.onError(t)
                 }
             })
+
+            emitter.setCancellable {
+                if (sensorCall.isCanceled) return@setCancellable
+                sensorCall.cancel()
+            }
         }
         // Don't need the allSensorsDownloader, with the new API. Leaving it here so you know the pain I went through.
 //        return allSensorsDownloader.getAllSensors()
@@ -283,6 +292,7 @@ java.io.IOException: canceled due to java.lang.ArrayIndexOutOfBoundsException: l
                         }
                     }
                     Log.d(TAG, "Found ${valids.size} valid sensors and $invalidCount invalid ones")
+                    if (emitter.isDisposed) return@create
                     emitter.onSuccess(valids)
                 }
                 .subscribeOn(Schedulers.computation())
@@ -292,12 +302,15 @@ java.io.IOException: canceled due to java.lang.ArrayIndexOutOfBoundsException: l
 
     fun loadSensor(sensorId: Int): Single<Sensor> {
         return Single.create { emitter: SingleEmitter<Sensor> ->
-            service.sensor(sensorId, REQUIRED_FIELDS)!!.enqueue(object : Callback<SingleSensorResult?> {
+            val sensorCall = service.sensor(sensorId, REQUIRED_FIELDS)!!
+            sensorCall.enqueue(object : Callback<SingleSensorResult?> {
 
                 override fun onResponse(call: Call<SingleSensorResult?>, response: Response<SingleSensorResult?>) {
                     if (response.isSuccessful && response.body() != null) {
                         val d = response.body()!!.sensor
                         Log.v(TAG, "Got sensor $d : ${d?.stats} : ${d?.name}")
+                        if (emitter.isDisposed) return
+
                         if (d != null &&  d.stats != null && d.latitude != null && d.longitude != null) {
                             emitter.onSuccess(d)
                         } else {
@@ -315,9 +328,15 @@ java.io.IOException: canceled due to java.lang.ArrayIndexOutOfBoundsException: l
                         Log.w(TAG, "Cache error, evicting", t)
                         client.cache?.delete()
                     }
+
+                    if (emitter.isDisposed) return
                     emitter.onError(t)
                 }
             })
+            emitter.setCancellable {
+                if (sensorCall.isCanceled) return@setCancellable
+                sensorCall.cancel()
+            }
         }
         .doOnSuccess {
             prefs.edit()
