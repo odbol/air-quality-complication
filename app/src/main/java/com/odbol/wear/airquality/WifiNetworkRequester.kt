@@ -17,7 +17,7 @@ import io.reactivex.subjects.SingleSubject
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
-const val TAG = "WifiNetworkRequester"
+private const val TAG = "WifiNetworkRequester"
 
 class WifiNetworkRequester(context: Context) {
 //
